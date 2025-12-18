@@ -382,7 +382,8 @@
               beginAtZero: true,
               title: { display: true, text: "Clearing Price (EUR)" },
               ticks: {
-                callback: v => "€ " + Number(v).toFixed(0)
+                callback: v => "€ " + Number(v).toFixed(0),
+                padding: 5
               },
               grid: {
                 drawBorder: false,
@@ -406,7 +407,8 @@
                 drawTicks: false
               },
               ticks: {
-                callback: v => v.toFixed(0) + "%"
+                callback: v => v.toFixed(0) + "%",
+                padding: 5
               },
               title: { display: true, text: "Spread Capture %" },
               border: {
