@@ -9,7 +9,7 @@
   "webcomponents": [
     {
       "kind": "main",
-      "url": "https://basimwangde.github.io/SAC-CHART-POC/combo-chart.js",
+      "url": "https://github.com/itadmin-sap/SAC_Eleclink_Combo_Chart/combo-chart.js",
       "tag": "perci-combo-chart",
       "integrity": "",
       "ignoreIntegrity": true
