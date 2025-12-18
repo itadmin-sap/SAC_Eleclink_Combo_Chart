@@ -1,0 +1,30 @@
+{
+  "id": "com.percipere.combochart",
+  "name": "Combo Bar-Line Chart",
+  "version": "1.0.0",
+  "vendor": "Percipere",
+  "license": "",
+  "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
+  "newInstancePrefix": "ChartPOC",
+  "webcomponents": [
+    {
+      "kind": "main",
+      "url": "https://basimwangde.github.io/SAC-CHART-POC/combo-chart.js",
+      "tag": "perci-combo-chart",
+      "integrity": "",
+      "ignoreIntegrity": true
+    }
+  ],
+  "properties": {
+  },
+  "dataBindings": {
+    "main": {
+      "feeds": [
+        { "id": "dimensions", "type": "dimension", "description": "Category (e.g., Month)" },
+        { "id": "measures",   "type": "mainStructureMember", "description": "Pick 1–2 measures (Bar = #1, Line = #2)" }
+      ]
+    }
+  },
+  "methods": {},
+  "events": {}
+}
