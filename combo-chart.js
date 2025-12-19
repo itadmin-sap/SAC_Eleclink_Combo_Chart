@@ -383,7 +383,7 @@
               title: { display: true, text: "Clearing Price (EUR)" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
-                padding: 20
+                padding: 20 // Adds spacing to avoid overlap
               },
               grid: {
                 drawBorder: false,
@@ -408,7 +408,7 @@
               },
               ticks: {
                 callback: v => v.toFixed(0) + "%",
-                padding: 20
+                padding: 20 // Adds spacing to avoid overlap
               },
               title: { display: true, text: "Spread Capture %" },
               border: {
