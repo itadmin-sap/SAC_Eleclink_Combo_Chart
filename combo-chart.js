@@ -113,19 +113,32 @@
       const DAY_AHEAD_NAME = "Day-Ahead";   // exact text in PRODUCT_CODE
       const LONG_TERM_NAME = "Long Term";
 
+      const OTHER_COLORS = [ 
+          "#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a",
+          "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
+          "#c19af8ff", "#F8CECE", "#D5CDF9" ];
+
+          
       const barColor = [];
       const lineColor = [];
+          
+      let otherColorIndex  = 0;
+
 
       uniqueProducts.forEach(p => {
         if (p === DAY_AHEAD_NAME) {
           barColor.push("#93C47D");   // Day-Ahead bar (green)
           lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
         } else if (p === LONG_TERM_NAME) {
-          barColor.push("#F9CCCC");   // Long Term bar (light pink)
-          lineColor.push("#000000");  // Long Term line (black)
+          // barColor.push("#F9CCCC");   // Long Term bar (light pink)
+          const c = LONG_TERM_COLORS[longTermIdx % LONG_TERM_COLORS.length];
+          longTermIdx += 1;
+          barColor.push(c);
+          lineColor.push(c);
+          // lineColor.push("#000000");  // Long Term line (black)
         } else {
-          barColor.push("#93C47D");
-          lineColor.push("#7F7F7F");
+          barColor.push("#6434e7ff");
+          lineColor.push("#511c1cff");
         }
       });
 
@@ -189,12 +202,12 @@
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
-        const OTHER_COLORS = [ 
-          "#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a",
-          "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
-          "#c19af8ff", "#F8CECE", "#D5CDF9" ];
+        // const OTHER_COLORS = [ 
+        //   "#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a",
+        //   "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
+        //   "#c19af8ff", "#F8CECE", "#D5CDF9" ];
 
-        let otherColorIndex  = 0;
+        // let otherColorIndex  = 0;
 
         for (let i = 0; i < src.DATE.length; i++) {
           if (src.PRODUCT_CODE[i] !== prodName) continue;
@@ -215,26 +228,12 @@
         // const lineBorderColor = plist.LineColour[idx];
         // const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
 
-        const isDayAhead = prodName === "Day-Ahead";
-
-        // base colors
-        let barBgColor      = plist.BarColour[idx];
-        let lineBorderColor = plist.LineColour[idx];
-
-        if (isDayAhead) {
-          // fixed colors for Day-Ahead
-          barBgColor      = "#93C47D";
-          lineBorderColor = "#7F7F7F";
-        } else {
-          // take next color from OTHER_COLORS for non Day-Ahead
-          const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
-          otherColorIndex += 1;
-          barBgColor      = c;
-          lineBorderColor = c;
-        }
+        const barBgColor      = plist.BarColour[idx];
+        const lineBorderColor = plist.LineColour[idx];
 
         const labelBgColor   = barBgColor;
-        const labelBgColor_1 = isDayAhead ? "#7F7F7F" : "#000000";
+        // if the line is the gray Day-Ahead line, keep gray labels; otherwise black
+        const labelBgColor_1 = lineBorderColor === "#7F7F7F" ? "#7F7F7F" : "#000000";
 
         // BAR DATASET (CLEARING_PRICE)
         datasets.push({
