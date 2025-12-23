@@ -194,7 +194,7 @@
           "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
           "#c19af8ff", "#F8CECE", "#D5CDF9" ];
 
-        let nonDayAheadColorIndex = 0;
+        let otherColorIndex  = 0;
 
         for (let i = 0; i < src.DATE.length; i++) {
           if (src.PRODUCT_CODE[i] !== prodName) continue;
@@ -215,22 +215,26 @@
         // const lineBorderColor = plist.LineColour[idx];
         // const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
 
-
-        // ✅ Assign colors 
         const isDayAhead = prodName === "Day-Ahead";
-        let labelBgColor, labelBgColor_1;
+
+        // base colors
+        let barBgColor      = plist.BarColour[idx];
+        let lineBorderColor = plist.LineColour[idx];
 
         if (isDayAhead) {
-          labelBgColor = "#93C47D";
-          labelBgColor_1 = "#7F7F7F"; 
+          // fixed colors for Day-Ahead
+          barBgColor      = "#93C47D";
+          lineBorderColor = "#7F7F7F";
         } else {
-          labelBgColor = nonDayAheadColors[nonDayAheadColorIndex % nonDayAheadColors.length];
-          labelBgColor_1 = "#000000"; 
-          nonDayAheadColorIndex++; 
-        } 
+          // take next color from OTHER_COLORS for non Day-Ahead
+          const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
+          otherColorIndex += 1;
+          barBgColor      = c;
+          lineBorderColor = c;
+        }
 
-        const barBgColor = plist.BarColour[idx];
-        const lineBorderColor = plist.LineColour[idx];
+        const labelBgColor   = barBgColor;
+        const labelBgColor_1 = isDayAhead ? "#7F7F7F" : "#000000";
 
         // BAR DATASET (CLEARING_PRICE)
         datasets.push({
