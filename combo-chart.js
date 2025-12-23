@@ -122,7 +122,7 @@
       const barColor = [];
       const lineColor = [];
           
-      let otherColorIndex  = 0;
+      let otherColorIndex = 0;
 
 
       uniqueProducts.forEach(p => {
@@ -131,14 +131,17 @@
           lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
         } else if (p === LONG_TERM_NAME) {
           // barColor.push("#F9CCCC");   // Long Term bar (light pink)
-          const c = LONG_TERM_COLORS[longTermIdx % LONG_TERM_COLORS.length];
-          longTermIdx += 1;
+          const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
+          otherColorIndex += 1;
           barColor.push(c);
           lineColor.push(c);
           // lineColor.push("#000000");  // Long Term line (black)
         } else {
-          barColor.push("#6434e7ff");
-          lineColor.push("#511c1cff");
+      // Other products: also use the list (or keep your own rule here)
+          const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
+          otherColorIndex += 1;
+          barColor.push(c);
+          lineColor.push(c);
         }
       });
 
