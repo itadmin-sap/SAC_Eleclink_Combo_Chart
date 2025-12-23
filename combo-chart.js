@@ -9,6 +9,8 @@
     "https://unpkg.com/chartjs-plugin-datalabels@2"
   ];
 
+  const CATEGORY_COLORS = ["#F9CCCC", "#0F9ED5", "#C476FE", "#F1F38D"]; // in order
+
   function loadScriptSequential(urls) {
     return new Promise((resolve, reject) => {
       const tryNext = (i) => {
@@ -63,12 +65,6 @@
         };
 
         rows.forEach(r => {
-          // Map SAC binding positions to live model fields:
-          // DATE              -> dimensions_0.label
-          // PRODUCT_CODE      -> dimensions_1.label
-          // PRODUCT_CATEGORY  -> dimensions_2.label
-          // CLEARING_PRICE    -> measures_0
-          // SPREAD_CAPTURE    -> measures_1
           const DATE             = r["dimensions_0"]?.label ?? "";
           const PRODUCT_CODE     = r["dimensions_1"]?.label ?? "";
           const PRODUCT_CATEGORY = r["dimensions_2"]?.label ?? "";
@@ -103,34 +99,26 @@
       const src = this._SourceData;
 
       const uniqueDates = Array.from(new Set(src.DATE));
-      const uniqueProducts = Array.from(new Set(src.PRODUCT_CODE));
+      // group by PRODUCT_CATEGORY instead of PRODUCT_CODE
+      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)).sort(); // ascending order
 
       this._LabelData = { UniqueDate: uniqueDates };
-      this._ProductListData = this._buildProductList(uniqueProducts);
+      this._CategoryListData = this._buildCategoryList(uniqueCategories);
     }
 
-    _buildProductList(uniqueProducts) {
-      const DAY_AHEAD_NAME = "Day-Ahead";   // exact text in PRODUCT_CODE
-      const LONG_TERM_NAME = "Long Term";
-
+    _buildCategoryList(uniqueCategories) {
       const barColor = [];
       const lineColor = [];
 
-      uniqueProducts.forEach(p => {
-        if (p === DAY_AHEAD_NAME) {
-          barColor.push("#93C47D");   // Day-Ahead bar (green)
-          lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
-        } else if (p === LONG_TERM_NAME) {
-          barColor.push("#F9CCCC");   // Long Term bar (light pink)
-          lineColor.push("#000000");  // Long Term line (black)
-        } else {
-          barColor.push("#93C47D");
-          lineColor.push("#7F7F7F");
-        }
+      uniqueCategories.forEach((cat, index) => {
+        const baseColor = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+        barColor.push(baseColor);
+        // darker/constant line color for contrast
+        lineColor.push("#000000");
       });
 
       return {
-        Product: uniqueProducts,
+        Category: uniqueCategories,
         BarColour: barColor,
         LineColour: lineColor
       };
@@ -152,7 +140,7 @@
           };
 
           this._LabelData = { UniqueDate: [] };
-          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+          this._CategoryListData = { Category: [], BarColour: [], LineColour: [] };
 
           this._updateSourceFromBinding(this.main);
           this._render();
@@ -185,16 +173,16 @@
     _buildDatasets() {
       const dates = this._LabelData.UniqueDate;
       const src = this._SourceData;
-      const plist = this._ProductListData;
+      const clist = this._CategoryListData;
 
       const datasets = [];
 
-      plist.Product.forEach((prodName, idx) => {
+      clist.Category.forEach((catName, idx) => {
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
         for (let i = 0; i < src.DATE.length; i++) {
-          if (src.PRODUCT_CODE[i] !== prodName) continue;
+          if (src.PRODUCT_CATEGORY[i] !== catName) continue;
 
           const date = src.DATE[i];
           const pos = dates.indexOf(date);
@@ -204,18 +192,15 @@
           lineData[pos] = src.SPREAD_CAPTURE[i];
         }
 
-        // PRODUCT_CODE == "Day-Ahead"
-        const isDayAhead = prodName === "Day-Ahead";
-
-        const barBgColor   = plist.BarColour[idx];
-        const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
-        const lineBorderColor = plist.LineColour[idx];
-        const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
+        const barBgColor   = clist.BarColour[idx];
+        const labelBgColor = barBgColor;
+        const lineBorderColor = clist.LineColour[idx];
+        const labelBgColor_1  = lineBorderColor;
 
         // BAR DATASET (CLEARING_PRICE)
         datasets.push({
           type: "bar",
-          label: prodName + " Clearing Price",
+          label: catName + " Clearing Price",
           display: "auto",
           data: barData,
           backgroundColor: labelBgColor,
@@ -230,16 +215,8 @@
             color: "#ffffff",
             backgroundColor: labelBgColor,
             borderRadius: 2,
-            padding: {
-              top: 4,
-              bottom: 4,
-              left: 6,
-              right: 6
-            },
-            font: {
-              weight: "bold",
-              size: 11
-            },
+            padding: { top: 4, bottom: 4, left: 6, right: 6 },
+            font: { weight: "bold", size: 11 },
             formatter: (v) => {
               if (v == null || isNaN(v)) return null;
               return "€ " + v.toFixed(2);
@@ -250,12 +227,12 @@
         // LINE DATASET (SPREAD_CAPTURE %)
         datasets.push({
           type: "line",
-          label: prodName + " Spread Capture %",
+          label: catName + " Spread Capture %",
           data: lineData,
           display: "auto",
           yAxisID: "y1",
           borderColor: labelBgColor_1,
-          backgroundColor: lineBorderColor,
+          backgroundColor: labelBgColor_1,
           tension: 0,
           stepped: false,
           pointRadius: 4,
@@ -276,16 +253,8 @@
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
             borderRadius: 2,
-            padding: {
-              top: 4,
-              bottom: 4,
-              left: 6,
-              right: 6
-            },
-            font: {
-              weight: "bold",
-              size: 11
-            },
+            padding: { top: 4, bottom: 4, left: 6, right: 6 },
+            font: { weight: "bold", size: 11 },
             formatter: (v) => v == null || isNaN(v) ? "" : v.toFixed(0) + "%"
           }
         });
@@ -314,24 +283,24 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 40 }
+            padding: { top: 10 }   // reduced header space
           },
           plugins: {
             title: {
               display: true,
               text: "SPREAD CAPTURE VS CLEARING PRICE",
-              font: { size: 20, weight: "bold" },
+              font: { size: 16, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top: 10, bottom: 30 }
+              padding: { top: 4, bottom: 8 } // less vertical padding
             },
             legend: {
               position: "bottom",
               align: "center",
               labels: {
                 usePointStyle: true,
-                padding: 18,
-                boxWidth: 30,
+                padding: 12,
+                boxWidth: 24,
                 font: { size: 11 },
                 generateLabels: (chart) => {
                   const base =
@@ -372,10 +341,10 @@
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: "Clearing Price (EUR)" },
+              title: { display: false, text: "" }, // remove axis label
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
-                padding: 20
+                padding: 8
               },
               grid: {
                 drawBorder: false,
@@ -390,6 +359,7 @@
             y1: {
               beginAtZero: true,
               position: "right",
+              title: { display: false, text: "" }, // remove axis label
               grid: { 
                 drawOnChartArea: false,
                 drawBorder: false,
@@ -397,12 +367,12 @@
               },
               ticks: {
                 callback: v => v.toFixed(0) + "%",
-                padding: 20
+                padding: 8
               },
-              title: { display: true, text: "Spread Capture %" },
               border: { display: false, width: 0 }
             },
             x: {
+              title: { display: false, text: "" }, // remove axis label
               grid: {
                 display: false,
                 drawBorder: false,
