@@ -106,7 +106,7 @@
       this._ProductListData = this._buildProductList(uniqueCategories);
     }
 
-    _buildProductList(uniqueCategories) {
+    _buildProductList(uniqueProducts) {
       const DAY_AHEAD_NAME = "Day-Ahead";  
       const LONG_TERM_NAME = "Long Term";
 
