@@ -110,7 +110,7 @@
     }
 
     _buildProductList(uniqueProducts) {
-      const DAY_AHEAD_NAME = "Day-Ahead";   // exact text in PRODUCT_CODE
+      const DAY_AHEAD_NAME = "Day Ahead";   // exact text in PRODUCT_CODE
       const LONG_TERM_NAME = "Long Term";
 
       const barColor = [];
@@ -194,7 +194,7 @@
         const lineData = new Array(dates.length).fill(null);
 
         for (let i = 0; i < src.DATE.length; i++) {
-          if (src.PRODUCT_CODE[i] !== prodName) continue;
+          if (src.PRODUCT_CATEGORY[i] !== prodName) continue;
 
           const date = src.DATE[i];
           const pos = dates.indexOf(date);
@@ -204,8 +204,8 @@
           lineData[pos] = src.SPREAD_CAPTURE[i];
         }
 
-        // PRODUCT_CODE == "Day-Ahead"
-        const isDayAhead = prodName === "Day-Ahead";
+        // PRODUCT_CATEGORY == "Day Ahead"
+        const isDayAhead = prodName === "Day Ahead";
 
         const barBgColor   = plist.BarColour[idx];
         const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
