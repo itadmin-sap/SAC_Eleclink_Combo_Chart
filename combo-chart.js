@@ -189,7 +189,7 @@
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
-        const nonDayAheadColors = [ 
+        const OTHER_COLORS = [ 
           "#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a",
           "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
           "#c19af8ff", "#F8CECE", "#D5CDF9" ];
