@@ -291,7 +291,7 @@
           data: lineData,
           display: "auto",
           yAxisID: "y1",
-          borderColor: labelBgColor_1,
+          borderColor: lineBorderColor,
           backgroundColor: lineBorderColor,
           tension: 0,
           stepped: false,
