@@ -9,8 +9,6 @@
     "https://unpkg.com/chartjs-plugin-datalabels@2"
   ];
 
-  const CATEGORY_COLORS_EXTRA = ["#C476FE", "#F1F38D"]; // used for categories other than Day-Ahead / Long Term
-
   function loadScriptSequential(urls) {
     return new Promise((resolve, reject) => {
       const tryNext = (i) => {
@@ -41,9 +39,6 @@
       this._chart = null;
     }
 
-    // -----------------------------
-    // DATA BINDING -> SOURCE MODEL
-    // -----------------------------
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
         DATE: [],
@@ -65,6 +60,12 @@
         };
 
         rows.forEach(r => {
+          // Map SAC binding positions to live model fields:
+          // DATE              -> dimensions_0.label
+          // PRODUCT_CODE      -> dimensions_1.label
+          // PRODUCT_CATEGORY  -> dimensions_2.label
+          // CLEARING_PRICE    -> measures_0
+          // SPREAD_CAPTURE    -> measures_1
           const DATE             = r["dimensions_0"]?.label ?? "";
           const PRODUCT_CODE     = r["dimensions_1"]?.label ?? "";
           const PRODUCT_CATEGORY = r["dimensions_2"]?.label ?? "";
@@ -99,35 +100,34 @@
       const src = this._SourceData;
 
       const uniqueDates = Array.from(new Set(src.DATE));
-      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)); // Day-Ahead, Long Term, etc.
+      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)).sort();
 
       this._LabelData = { UniqueDate: uniqueDates };
-      this._CategoryListData = this._buildCategoryList(uniqueCategories);
+      this._ProductListData = this._buildProductList(uniqueCategories);
     }
 
-    _buildCategoryList(uniqueCategories) {
+    _buildProductList(uniqueCategories) {
+      const DAY_AHEAD_NAME = "Day-Ahead";  
+      const LONG_TERM_NAME = "Long Term";
+
       const barColor = [];
       const lineColor = [];
 
-      let extraIndex = 0;
-
-      uniqueCategories.forEach(cat => {
-        if (cat === "Day-Ahead") {
-          barColor.push("#A1C7A8");   // pink
-          lineColor.push("#000000");  // black line
-        } else if (cat === "Long Term") {
-          barColor.push("#F9CCCC");   // blue
-          lineColor.push("#000000");
+      uniqueProducts.forEach(p => {
+        if (p === DAY_AHEAD_NAME) {
+          barColor.push("#93C47D");   // Day-Ahead bar (green)
+          lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
+        } else if (p === LONG_TERM_NAME) {
+          barColor.push("#F9CCCC");   // Long Term bar (light pink)
+          lineColor.push("#000000");  // Long Term line (black)
         } else {
-          const baseColor = CATEGORY_COLORS_EXTRA[extraIndex % CATEGORY_COLORS_EXTRA.length];
-          extraIndex += 1;
-          barColor.push(baseColor);
-          lineColor.push("#000000");
+          barColor.push("#93C47D");
+          lineColor.push("#7F7F7F");
         }
       });
 
       return {
-        Category: uniqueCategories,
+        Product: uniqueProducts,
         BarColour: barColor,
         LineColour: lineColor
       };
@@ -146,7 +146,7 @@
           };
 
           this._LabelData = { UniqueDate: [] };
-          this._CategoryListData = { Category: [], BarColour: [], LineColour: [] };
+          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
 
           this._updateSourceFromBinding(this.main);
           this._render();
@@ -173,37 +173,86 @@
       this._shadow.innerHTML = `<div style="font:14px sans-serif;padding:8px;color:#b00020">${msg}</div>`;
     }
 
+    // _buildDatasets() {
+    //   const dates = this._LabelData.UniqueDate;
+    //   const src = this._SourceData;
+    //   const plist = this._ProductListData;
+
+    //   const datasets = [];
+
+    //   plist.Product.forEach((prodName, idx) => {
+    //     const barData = new Array(dates.length).fill(null);
+    //     const lineData = new Array(dates.length).fill(null);
+
+    //     for (let i = 0; i < src.DATE.length; i++) {
+    //       if (src.PRODUCT_CATEGORY[i] !== prodName) continue;
+    //       // if (src.[i] !== prodName) continue;
+
+    //       const date = src.DATE[i];
+    //       const pos = dates.indexOf(date);
+    //       if (pos === -1) continue;
+
+    //       barData[pos]  = src.CLEARING_PRICE[i];
+    //       lineData[pos] = src.SPREAD_CAPTURE[i];
+    //     }
+
+    //     // PRODUCT_CODE == "Day-Ahead"
+    //     const isDayAhead = prodName === "Day-Ahead";
+
+    //     const barBgColor   = plist.BarColour[idx];
+    //     const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
+    //     const lineBorderColor = plist.LineColour[idx];
+    //     const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
+
+    
     _buildDatasets() {
       const dates = this._LabelData.UniqueDate;
       const src = this._SourceData;
-      const clist = this._CategoryListData;
-
+      const plist = this._ProductListData;
+      const COLORS_FOR_LONG_TERM = ["#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a"];
+      
       const datasets = [];
 
-      clist.Category.forEach((catName, idx) => {
+      // index to rotate long-term colors
+      let longTermColorIndex = 0;
+
+      plist.Product.forEach((prodName, idx) => {
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
         for (let i = 0; i < src.DATE.length; i++) {
-          if (src.PRODUCT_CATEGORY[i] !== catName) continue;
+        if (src.PRODUCT_CATEGORY[i] !== prodName) continue;
 
-          const date = src.DATE[i];
-          const pos = dates.indexOf(date);
-          if (pos === -1) continue;
+        const date = src.DATE[i];
+        const pos = dates.indexOf(date);
+        if (pos === -1) continue;
 
-          barData[pos]  = src.CLEARING_PRICE[i];
-          lineData[pos] = src.SPREAD_CAPTURE[i];
-        }
+        barData[pos]  = src.CLEARING_PRICE[i];
+        lineData[pos] = src.SPREAD_CAPTURE[i];
+      }
 
-        const barBgColor   = clist.BarColour[idx];
-        const labelBgColor = barBgColor;
-        const lineBorderColor = clist.LineColour[idx];
-        const labelBgColor_1  = lineBorderColor;
+      const isDayAhead = prodName === "Day-Ahead";
+      const isLongTerm = prodName === "Long Term";
+
+       // base color from ProductListData
+      let barBgColor = plist.BarColour[idx];
+      let lineBorderColor = plist.LineColour[idx];
+
+      // override with ascending list when category is Long Term
+      if (isLongTerm) {
+        const c = COLORS_FOR_LONG_TERM[longTermColorIndex % COLORS_FOR_LONG_TERM.length];
+        longTermColorIndex += 1;
+        barBgColor = c;
+        lineBorderColor = c;
+      }
+
+      const labelBgColor   = isDayAhead ? "#93C47D" : barBgColor;
+      const labelBgColor_1 = isDayAhead ? "#7F7F7F" : "#000000";
 
         // BAR DATASET (CLEARING_PRICE)
         datasets.push({
           type: "bar",
-          label: catName + " Clearing Price",
+          label: prodName + " Clearing Price",
           display: "auto",
           data: barData,
           backgroundColor: labelBgColor,
@@ -218,8 +267,16 @@
             color: "#ffffff",
             backgroundColor: labelBgColor,
             borderRadius: 2,
-            padding: { top: 4, bottom: 4, left: 6, right: 6 },
-            font: { weight: "bold", size: 11 },
+            padding: {
+              top: 4,
+              bottom: 4,
+              left: 6,
+              right: 6
+            },
+            font: {
+              weight: "bold",
+              size: 11
+            },
             formatter: (v) => {
               if (v == null || isNaN(v)) return null;
               return "€ " + v.toFixed(2);
@@ -230,12 +287,12 @@
         // LINE DATASET (SPREAD_CAPTURE %)
         datasets.push({
           type: "line",
-          label: catName + " Spread Capture %",
+          label: prodName + " Spread Capture %",
           data: lineData,
           display: "auto",
           yAxisID: "y1",
           borderColor: labelBgColor_1,
-          backgroundColor: labelBgColor_1,
+          backgroundColor: lineBorderColor,
           tension: 0,
           stepped: false,
           pointRadius: 4,
@@ -256,8 +313,16 @@
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
             borderRadius: 2,
-            padding: { top: 4, bottom: 4, left: 6, right: 6 },
-            font: { weight: "bold", size: 11 },
+            padding: {
+              top: 4,
+              bottom: 4,
+              left: 6,
+              right: 6
+            },
+            font: {
+              weight: "bold",
+              size: 11
+            },
             formatter: (v) => v == null || isNaN(v) ? "" : v.toFixed(0) + "%"
           }
         });
@@ -286,24 +351,24 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 10 }   // compact header
+            padding: { top: 40 }
           },
           plugins: {
             title: {
               display: true,
               text: "SPREAD CAPTURE VS CLEARING PRICE",
-              font: { size: 16, weight: "bold" },
+              font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top: 4, bottom: 8 }
+              padding: { top: 10, bottom: 30 }
             },
             legend: {
               position: "bottom",
               align: "center",
               labels: {
                 usePointStyle: true,
-                padding: 12,
-                boxWidth: 24,
+                padding: 18,
+                boxWidth: 30,
                 font: { size: 11 },
                 generateLabels: (chart) => {
                   const base =
@@ -344,10 +409,10 @@
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: false, text: "" },
+              title: { display: true, text: "Clearing Price (EUR)" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
-                padding: 8
+                padding: 20
               },
               grid: {
                 drawBorder: false,
@@ -362,20 +427,19 @@
             y1: {
               beginAtZero: true,
               position: "right",
-              title: { display: false, text: "" },
-              grid: {
+              grid: { 
                 drawOnChartArea: false,
                 drawBorder: false,
                 drawTicks: false
               },
               ticks: {
                 callback: v => v.toFixed(0) + "%",
-                padding: 8
+                padding: 20
               },
+              title: { display: true, text: "Spread Capture %" },
               border: { display: false, width: 0 }
             },
             x: {
-              title: { display: false, text: "" },
               grid: {
                 display: false,
                 drawBorder: false,
