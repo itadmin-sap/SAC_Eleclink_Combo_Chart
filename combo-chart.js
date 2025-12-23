@@ -31,56 +31,10 @@
       const container = document.createElement("div");
       Object.assign(container.style, { width: "100%", height: "100%", display: "flex" });
 
-      // this._canvas = document.createElement("canvas");
-      // Object.assign(this._canvas.style, { width: "100%", height: "100%" });
-      // container.appendChild(this._canvas);
-      // this._shadow.appendChild(container);
-
-      // Loading overlay
-      this._loadingOverlay = document.createElement("div");
-      Object.assign(this._loadingOverlay.style, {
-        position: "absolute",
-        top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(255,255,255,0.9)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-        opacity: 1,
-        transition: "opacity 0.3s ease"
-      });
-
-      // Spinner element
-      const spinner = document.createElement("div");
-      spinner.className = "loading-spinner";
-      this._loadingOverlay.appendChild(spinner);
-      container.appendChild(this._loadingOverlay);
-
       this._canvas = document.createElement("canvas");
       Object.assign(this._canvas.style, { width: "100%", height: "100%" });
       container.appendChild(this._canvas);
       this._shadow.appendChild(container);
-
-      // Add CSS for spinner animation
-      const style = document.createElement("style");
-      style.textContent = `
-        .loading-spinner {
-          width: 50px;
-          height: 50px;
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #3498db;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }.loading-hidden {
-          opacity: 0 !important;
-          pointer-events: none !important;
-        }
-      `;
-      this._shadow.appendChild(style);
 
       this._chart = null;
     }
