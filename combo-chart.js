@@ -185,7 +185,7 @@
         const lineData = new Array(dates.length).fill(null);
 
         for (let i = 0; i < src.DATE.length; i++) {
-          if (src.PRODUCT_CODE[i] !== prodName) continue;
+          if (src.Products[i] !== prodName) continue;
           // if (src.[i] !== prodName) continue;
 
           const date = src.DATE[i];
@@ -203,51 +203,6 @@
         const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
         const lineBorderColor = plist.LineColour[idx];
         const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
-
-    
-    // _buildDatasets() {
-    //   const dates = this._LabelData.UniqueDate;
-    //   const src = this._SourceData;
-    //   const plist = this._ProductListData;
-    //   const COLORS_FOR_LONG_TERM = ["#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a"];
-      
-    //   const datasets = [];
-
-    //   // index to rotate long-term colors
-    //   let longTermColorIndex = 0;
-
-    //   plist.Product.forEach((prodName, idx) => {
-    //     const barData = new Array(dates.length).fill(null);
-    //     const lineData = new Array(dates.length).fill(null);
-
-    //     for (let i = 0; i < src.DATE.length; i++) {
-    //     if (src.PRODUCT_CATEGORY[i] !== prodName) continue;
-
-    //     const date = src.DATE[i];
-    //     const pos = dates.indexOf(date);
-    //     if (pos === -1) continue;
-
-    //     barData[pos]  = src.CLEARING_PRICE[i];
-    //     lineData[pos] = src.SPREAD_CAPTURE[i];
-    //   }
-
-    //   const isDayAhead = prodName === "Day-Ahead";
-    //   const isLongTerm = prodName === "Long Term";
-
-    //    // base color from ProductListData
-    //   let barBgColor = plist.BarColour[idx];
-    //   let lineBorderColor = plist.LineColour[idx];
-
-    //   // override with ascending list when category is Long Term
-    //   if (isLongTerm) {
-    //     const c = COLORS_FOR_LONG_TERM[longTermColorIndex % COLORS_FOR_LONG_TERM.length];
-    //     longTermColorIndex += 1;
-    //     barBgColor = c;
-    //     lineBorderColor = c;
-    //   }
-
-    //   const labelBgColor   = isDayAhead ? "#93C47D" : barBgColor;
-    //   const labelBgColor_1 = isDayAhead ? "#7F7F7F" : "#000000";
 
         // BAR DATASET (CLEARING_PRICE)
         datasets.push({
