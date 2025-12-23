@@ -340,7 +340,7 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 40 }
+            padding: { top: 10 , right: 0, bottom: 0, left: 0}
           },
           plugins: {
             title: {
@@ -349,7 +349,7 @@
               font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top: 10, bottom: 30 }
+              padding: { top:2, bottom: 10}
             },
             legend: {
               position: "bottom",
@@ -398,7 +398,7 @@
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: "Clearing Price (EUR)" },
+              title: { display: true, text: "" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
                 padding: 20
@@ -425,7 +425,7 @@
                 callback: v => v.toFixed(0) + "%",
                 padding: 20
               },
-              title: { display: true, text: "Spread Capture %" },
+              title: { display: true, text: "" },
               border: { display: false, width: 0 }
             },
             x: {
