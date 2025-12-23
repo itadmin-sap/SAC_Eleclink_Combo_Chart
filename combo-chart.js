@@ -340,7 +340,7 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 10 , right: 0, bottom: 0, left: 0}
+            padding: { top: 35 , right: 0, bottom: 0, left: 0}
           },
           plugins: {
             title: {
@@ -349,7 +349,7 @@
               font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top:2, bottom: 10}
+              padding: { top:2, bottom: 30}
             },
             legend: {
               position: "bottom",
