@@ -9,7 +9,7 @@
     "https://unpkg.com/chartjs-plugin-datalabels@2"
   ];
 
-  const CATEGORY_COLORS = ["#F9CCCC", "#0F9ED5", "#C476FE", "#F1F38D"]; // in order
+  const CATEGORY_COLORS_EXTRA = ["#C476FE", "#F1F38D"]; // used for categories other than Day-Ahead / Long Term
 
   function loadScriptSequential(urls) {
     return new Promise((resolve, reject) => {
@@ -99,8 +99,7 @@
       const src = this._SourceData;
 
       const uniqueDates = Array.from(new Set(src.DATE));
-      // group by PRODUCT_CATEGORY instead of PRODUCT_CODE
-      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)).sort(); // ascending order
+      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)); // Day-Ahead, Long Term, etc.
 
       this._LabelData = { UniqueDate: uniqueDates };
       this._CategoryListData = this._buildCategoryList(uniqueCategories);
@@ -110,11 +109,21 @@
       const barColor = [];
       const lineColor = [];
 
-      uniqueCategories.forEach((cat, index) => {
-        const baseColor = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
-        barColor.push(baseColor);
-        // darker/constant line color for contrast
-        lineColor.push("#000000");
+      let extraIndex = 0;
+
+      uniqueCategories.forEach(cat => {
+        if (cat === "Day-Ahead") {
+          barColor.push("#A1C7A8");   // pink
+          lineColor.push("#000000");  // black line
+        } else if (cat === "Long Term") {
+          barColor.push("#F9CCCC");   // blue
+          lineColor.push("#000000");
+        } else {
+          const baseColor = CATEGORY_COLORS_EXTRA[extraIndex % CATEGORY_COLORS_EXTRA.length];
+          extraIndex += 1;
+          barColor.push(baseColor);
+          lineColor.push("#000000");
+        }
       });
 
       return {
@@ -124,9 +133,6 @@
       };
     }
 
-    // -----------------------------
-    // LIFECYCLE
-    // -----------------------------
     connectedCallback() {
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
@@ -167,9 +173,6 @@
       this._shadow.innerHTML = `<div style="font:14px sans-serif;padding:8px;color:#b00020">${msg}</div>`;
     }
 
-    // -----------------------------
-    // DATASETS & RENDERING
-    // -----------------------------
     _buildDatasets() {
       const dates = this._LabelData.UniqueDate;
       const src = this._SourceData;
@@ -283,7 +286,7 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 10 }   // reduced header space
+            padding: { top: 10 }   // compact header
           },
           plugins: {
             title: {
@@ -292,7 +295,7 @@
               font: { size: 16, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top: 4, bottom: 8 } // less vertical padding
+              padding: { top: 4, bottom: 8 }
             },
             legend: {
               position: "bottom",
@@ -341,7 +344,7 @@
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: false, text: "" }, // remove axis label
+              title: { display: false, text: "" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
                 padding: 8
@@ -359,8 +362,8 @@
             y1: {
               beginAtZero: true,
               position: "right",
-              title: { display: false, text: "" }, // remove axis label
-              grid: { 
+              title: { display: false, text: "" },
+              grid: {
                 drawOnChartArea: false,
                 drawBorder: false,
                 drawTicks: false
@@ -372,7 +375,7 @@
               border: { display: false, width: 0 }
             },
             x: {
-              title: { display: false, text: "" }, // remove axis label
+              title: { display: false, text: "" },
               grid: {
                 display: false,
                 drawBorder: false,
