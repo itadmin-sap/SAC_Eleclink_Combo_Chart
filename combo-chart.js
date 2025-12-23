@@ -41,43 +41,65 @@
 
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
-        Products: [],
-        Date: [],
-        ProductCategory: [],
-        ClearingPrice: [],
-        SpreadCapture: []
+        // Products: [],
+        // Date: [],
+        // ProductCategory: [],
+        // ClearingPrice: [],
+        // SpreadCapture: []
+        DATE: [],
+        PRODUCT_CODE: [],
+        PRODUCT_CATEGORY: [],
+        CLEARING_PRICE: [],
+        SPREAD_CAPTURE: []
       };
 
       if (binding && Array.isArray(binding.data) && binding.data.length > 0) {
         const rows = binding.data;
 
         this._SourceData = {
-          Products: [],
-          Date: [],
-          ProductCategory: [],
-          ClearingPrice: [],
-          SpreadCapture: []
+          // Products: [],
+          // Date: [],
+          // ProductCategory: [],
+          // ClearingPrice: [],
+          // SpreadCapture: []
+          DATE: [],
+          PRODUCT_CODE: [],
+          PRODUCT_CATEGORY: [],
+          CLEARING_PRICE: [],
+          SPREAD_CAPTURE: []
         };
 
         rows.forEach(r => {
-          const date    = r["dimensions_0"]?.label ?? "";
-          const product = r["dimensions_1"]?.label ?? "";
-          const cat     = r["Product Category"] ?? r["dimensions_2"]?.label ?? "";
+          const DATE    = r["dimensions_0"]?.label ?? "";
+          const PRODUCT_CODE = r["dimensions_1"]?.label ?? "";
+          // const cat     = r["Product Category"] ?? r["dimensions_2"]?.label ?? "";
+          const Product_Category = r["dimensions_2"]?.label ?? "";
 
-          const m0 = r["measures_0"];
-          const m1 = r["measures_1"];
+          const CLEARING_PRICE_raw_m  = r["measures_0"];
+          const SPREAD_CAPTURE_raw_m  = r["measures_1"];
 
-          const clearingRaw = m0 ? Number(m0.raw ?? m0.label ?? m0) : null;
-          const clearing    = clearingRaw != null ? clearingRaw : null;
+          // const clearingRaw = m0 ? Number(m0.raw ?? m0.label ?? m0) : null;
+          // const clearing    = clearingRaw != null ? clearingRaw : null;
 
-          const spreadRaw   = m1 ? Number(m1.raw ?? m1.label ?? m1) : null;
-          const spread      = spreadRaw != null ? spreadRaw * 100 : null;
+          // const spreadRaw   = m1 ? Number(m1.raw ?? m1.label ?? m1) : null;
+          // const spread      = spreadRaw != null ? spreadRaw * 100 : null;
 
-          this._SourceData.Products.push(String(product));
-          this._SourceData.Date.push(String(date));
-          this._SourceData.ProductCategory.push(String(cat));
-          this._SourceData.ClearingPrice.push(clearing);
-          this._SourceData.SpreadCapture.push(spread);
+          const clearingRaw = CLEARING_PRICE_raw_m
+            ? Number(CLEARING_PRICE_raw_m.raw ?? CLEARING_PRICE_raw_m.label ?? CLEARING_PRICE_raw_m)
+            : null;
+          const CLEARING_PRICE = clearingRaw != null ? clearingRaw : null;
+
+          const spreadRaw = SPREAD_CAPTURE_raw_m
+            ? Number(SPREAD_CAPTURE_raw_m.raw ?? SPREAD_CAPTURE_raw_m.label ?? SPREAD_CAPTURE_raw_m)
+            : null;
+          const SPREAD_CAPTURE = spreadRaw != null ? spreadRaw * 100 : null;
+
+          
+          this._SourceData.DATE.push(String(DATE));
+          this._SourceData.PRODUCT_CODE.push(String(PRODUCT_CODE));
+          this._SourceData.PRODUCT_CATEGORY.push(String(PRODUCT_CATEGORY));
+          this._SourceData.CLEARING_PRICE.push(CLEARING_PRICE);
+          this._SourceData.SPREAD_CAPTURE.push(SPREAD_CAPTURE);
         });
       }
       if (this._SourceData && Array.isArray(this._SourceData.Date)) {
