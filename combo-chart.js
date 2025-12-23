@@ -39,11 +39,13 @@
       this._chart = null;
     }
 
+    // Map SAC binding rows to live-model field names
     _updateSourceFromBinding(binding) {
+      // Live-model oriented naming
       this._SourceData = this._SourceData || {
         DATE: [],
-        PRODUCT_CODE: [],
-        PRODUCT_CATEGORY: [],
+        Product_Code: [],
+        Product_Category: [],
         CLEARING_PRICE: [],
         SPREAD_CAPTURE: []
       };
@@ -53,22 +55,22 @@
 
         this._SourceData = {
           DATE: [],
-          PRODUCT_CODE: [],
-          PRODUCT_CATEGORY: [],
+          Product_Code: [],
+          Product_Category: [],
           CLEARING_PRICE: [],
           SPREAD_CAPTURE: []
         };
 
         rows.forEach(r => {
-          // Map SAC binding positions to live model fields:
-          // DATE              -> dimensions_0.label
-          // PRODUCT_CODE      -> dimensions_1.label
-          // PRODUCT_CATEGORY  -> dimensions_2.label
-          // CLEARING_PRICE    -> measures_0
-          // SPREAD_CAPTURE    -> measures_1
+          // IMPORTANT: keep the binding positions consistent with your Builder panel
+          //   DATE              -> dimensions_0.label
+          //   Product_Code      -> dimensions_1.label
+          //   Product_Category  -> dimensions_2.label
+          //   CLEARING_PRICE    -> measures_0
+          //   SPREAD_CAPTURE    -> measures_1
           const DATE             = r["dimensions_0"]?.label ?? "";
-          const PRODUCT_CODE     = r["dimensions_1"]?.label ?? "";
-          const PRODUCT_CATEGORY = r["dimensions_2"]?.label ?? "";
+          const Product_Code     = r["dimensions_1"]?.label ?? "";
+          const Product_Category = r["dimensions_2"]?.label ?? "";
 
           const CLEARING_PRICE_raw_m = r["measures_0"];
           const SPREAD_CAPTURE_raw_m = r["measures_1"];
@@ -84,8 +86,8 @@
           const SPREAD_CAPTURE = spreadRaw != null ? spreadRaw * 100 : null;
 
           this._SourceData.DATE.push(String(DATE));
-          this._SourceData.PRODUCT_CODE.push(String(PRODUCT_CODE));
-          this._SourceData.PRODUCT_CATEGORY.push(String(PRODUCT_CATEGORY));
+          this._SourceData.Product_Code.push(String(Product_Code));
+          this._SourceData.Product_Category.push(String(Product_Category));
           this._SourceData.CLEARING_PRICE.push(CLEARING_PRICE);
           this._SourceData.SPREAD_CAPTURE.push(SPREAD_CAPTURE);
         });
@@ -100,14 +102,14 @@
       const src = this._SourceData;
 
       const uniqueDates = Array.from(new Set(src.DATE));
-      const uniqueCategories = Array.from(new Set(src.PRODUCT_CATEGORY)).sort();
+      const uniqueProducts = Array.from(new Set(src.Product_Code));
 
-      this._LabelData = { UniqueDate: uniqueDates };
-      this._ProductListData = this._buildProductList(uniqueCategories);
+      this._LabelData = { UniqueDATE: uniqueDates };
+      this._ProductListData = this._buildProductList(uniqueProducts);
     }
 
     _buildProductList(uniqueProducts) {
-      const DAY_AHEAD_NAME = "Day-Ahead";  
+      const DAY_AHEAD_NAME = "Day-Ahead";
       const LONG_TERM_NAME = "Long Term";
 
       const barColor = [];
@@ -115,8 +117,8 @@
 
       uniqueProducts.forEach(p => {
         if (p === DAY_AHEAD_NAME) {
-          barColor.push("#93C47D");   // Day-Ahead bar (green)
-          lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
+          barColor.push("#93C47D");   // Day Ahead bar (green)
+          lineColor.push("#7F7F7F");  // Day Ahead line (gray)
         } else if (p === LONG_TERM_NAME) {
           barColor.push("#F9CCCC");   // Long Term bar (light pink)
           lineColor.push("#000000");  // Long Term line (black)
@@ -127,7 +129,7 @@
       });
 
       return {
-        Product: uniqueProducts,
+        Product_Code: uniqueProducts,
         BarColour: barColor,
         LineColour: lineColor
       };
@@ -139,14 +141,14 @@
         .then(() => {
           this._SourceData = {
             DATE: [],
-            PRODUCT_CODE: [],
-            PRODUCT_CATEGORY: [],
+            Product_Code: [],
+            Product_Category: [],
             CLEARING_PRICE: [],
             SPREAD_CAPTURE: []
           };
 
-          this._LabelData = { UniqueDate: [] };
-          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+          this._LabelData = { UniqueDATE: [] };
+          this._ProductListData = { Product_Code: [], BarColour: [], LineColour: [] };
 
           this._updateSourceFromBinding(this.main);
           this._render();
@@ -174,19 +176,18 @@
     }
 
     _buildDatasets() {
-      const dates = this._LabelData.UniqueDate;
+      const dates = this._LabelData.UniqueDATE;
       const src = this._SourceData;
       const plist = this._ProductListData;
 
       const datasets = [];
 
-      plist.Product.forEach((prodName, idx) => {
+      plist.Product_Code.forEach((prodCode, idx) => {
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
         for (let i = 0; i < src.DATE.length; i++) {
-          if (src.Products[i] !== prodName) continue;
-          // if (src.[i] !== prodName) continue;
+          if (src.Product_Code[i] !== prodCode) continue;
 
           const date = src.DATE[i];
           const pos = dates.indexOf(date);
@@ -196,18 +197,17 @@
           lineData[pos] = src.SPREAD_CAPTURE[i];
         }
 
-        // PRODUCT_CODE == "Day-Ahead"
-        const isDayAhead = prodName === "Day-Ahead";
+        const isDayAhead = prodCode === "Day-Ahead";
 
-        const barBgColor   = plist.BarColour[idx];
+        const barBgColor = plist.BarColour[idx];
         const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
         const lineBorderColor = plist.LineColour[idx];
-        const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
+        const labelBgColor_1 = isDayAhead ? "#7F7F7F" : "#000000";
 
-        // BAR DATASET (CLEARING_PRICE)
+        // BAR DATASET -> CLEARING_PRICE
         datasets.push({
           type: "bar",
-          label: prodName + " Clearing Price",
+          label: prodCode + " CLEARING_PRICE",
           display: "auto",
           data: barData,
           backgroundColor: labelBgColor,
@@ -239,10 +239,10 @@
           }
         });
 
-        // LINE DATASET (SPREAD_CAPTURE %)
+        // LINE DATASET -> SPREAD_CAPTURE
         datasets.push({
           type: "line",
-          label: prodName + " Spread Capture %",
+          label: prodCode + " SPREAD_CAPTURE %",
           data: lineData,
           display: "auto",
           yAxisID: "y1",
@@ -289,7 +289,7 @@
     _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
 
-      const dates  = this._LabelData.UniqueDate;
+      const dates  = this._LabelData.UniqueDATE;
       const labels = dates.map(d => d);
 
       const datasets = this._buildDatasets();
@@ -306,7 +306,9 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: { top: 40 }
+            padding: {
+              top: 40
+            }
           },
           plugins: {
             title: {
@@ -315,7 +317,10 @@
               font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: { top: 10, bottom: 30 }
+              padding: {
+                top: 10,
+                bottom: 30
+              }
             },
             legend: {
               position: "bottom",
@@ -350,7 +355,7 @@
                   const dsLabel = ctx.dataset.label || "";
                   const v = ctx.parsed.y;
                   if (v == null || isNaN(v)) return null;
-                  if (dsLabel.includes("Spread Capture")) {
+                  if (dsLabel.includes("SPREAD_CAPTURE")) {
                     return dsLabel + ": " + v.toFixed(0) + "%";
                   }
                   return dsLabel + ": € " + v.toFixed(2);
@@ -364,7 +369,7 @@
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: "Clearing Price (EUR)" },
+              title: { display: true, text: "CLEARING_PRICE (EUR)" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
                 padding: 20
@@ -377,7 +382,10 @@
                 borderDash: [],
                 display: true
               },
-              border: { display: false, width: 0 }
+              border: {
+                display: false,
+                width: 0
+              }
             },
             y1: {
               beginAtZero: true,
@@ -391,8 +399,11 @@
                 callback: v => v.toFixed(0) + "%",
                 padding: 20
               },
-              title: { display: true, text: "Spread Capture %" },
-              border: { display: false, width: 0 }
+              title: { display: true, text: "SPREAD_CAPTURE %" },
+              border: {
+                display: false,
+                width: 0
+              }
             },
             x: {
               grid: {
@@ -402,7 +413,10 @@
                 drawTicks: false,
                 lineWidth: 0
               },
-              border: { display: false, width: 0 },
+              border: {
+                display: false,
+                width: 0
+              },
               ticks: {
                 autoSkip: true,
                 maxRotation: 0,
