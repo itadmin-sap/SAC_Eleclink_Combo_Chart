@@ -39,13 +39,11 @@
       this._chart = null;
     }
 
+    // -----------------------------
+    // DATA BINDING -> SOURCE MODEL
+    // -----------------------------
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
-        // Products: [],
-        // Date: [],
-        // ProductCategory: [],
-        // ClearingPrice: [],
-        // SpreadCapture: []
         DATE: [],
         PRODUCT_CODE: [],
         PRODUCT_CATEGORY: [],
@@ -57,11 +55,6 @@
         const rows = binding.data;
 
         this._SourceData = {
-          // Products: [],
-          // Date: [],
-          // ProductCategory: [],
-          // ClearingPrice: [],
-          // SpreadCapture: []
           DATE: [],
           PRODUCT_CODE: [],
           PRODUCT_CATEGORY: [],
@@ -70,19 +63,18 @@
         };
 
         rows.forEach(r => {
-          const DATE    = r["dimensions_0"]?.label ?? "";
-          const PRODUCT_CODE = r["dimensions_1"]?.label ?? "";
-          // const cat     = r["Product Category"] ?? r["dimensions_2"]?.label ?? "";
-          const Product_Category = r["dimensions_2"]?.label ?? "";
+          // Map SAC binding positions to live model fields:
+          // DATE              -> dimensions_0.label
+          // PRODUCT_CODE      -> dimensions_1.label
+          // PRODUCT_CATEGORY  -> dimensions_2.label
+          // CLEARING_PRICE    -> measures_0
+          // SPREAD_CAPTURE    -> measures_1
+          const DATE             = r["dimensions_0"]?.label ?? "";
+          const PRODUCT_CODE     = r["dimensions_1"]?.label ?? "";
+          const PRODUCT_CATEGORY = r["dimensions_2"]?.label ?? "";
 
-          const CLEARING_PRICE_raw_m  = r["measures_0"];
-          const SPREAD_CAPTURE_raw_m  = r["measures_1"];
-
-          // const clearingRaw = m0 ? Number(m0.raw ?? m0.label ?? m0) : null;
-          // const clearing    = clearingRaw != null ? clearingRaw : null;
-
-          // const spreadRaw   = m1 ? Number(m1.raw ?? m1.label ?? m1) : null;
-          // const spread      = spreadRaw != null ? spreadRaw * 100 : null;
+          const CLEARING_PRICE_raw_m = r["measures_0"];
+          const SPREAD_CAPTURE_raw_m = r["measures_1"];
 
           const clearingRaw = CLEARING_PRICE_raw_m
             ? Number(CLEARING_PRICE_raw_m.raw ?? CLEARING_PRICE_raw_m.label ?? CLEARING_PRICE_raw_m)
@@ -94,7 +86,6 @@
             : null;
           const SPREAD_CAPTURE = spreadRaw != null ? spreadRaw * 100 : null;
 
-          
           this._SourceData.DATE.push(String(DATE));
           this._SourceData.PRODUCT_CODE.push(String(PRODUCT_CODE));
           this._SourceData.PRODUCT_CATEGORY.push(String(PRODUCT_CATEGORY));
@@ -102,7 +93,8 @@
           this._SourceData.SPREAD_CAPTURE.push(SPREAD_CAPTURE);
         });
       }
-      if (this._SourceData && Array.isArray(this._SourceData.Date)) {
+
+      if (this._SourceData && Array.isArray(this._SourceData.DATE)) {
         this._buildMetaFromSource();
       }
     }
@@ -110,15 +102,15 @@
     _buildMetaFromSource() {
       const src = this._SourceData;
 
-      const uniqueDates = Array.from(new Set(src.Date));
-      const uniqueProducts = Array.from(new Set(src.Products));
+      const uniqueDates = Array.from(new Set(src.DATE));
+      const uniqueProducts = Array.from(new Set(src.PRODUCT_CODE));
 
       this._LabelData = { UniqueDate: uniqueDates };
       this._ProductListData = this._buildProductList(uniqueProducts);
     }
 
     _buildProductList(uniqueProducts) {
-      const DAY_AHEAD_NAME = "Day Ahead";
+      const DAY_AHEAD_NAME = "Day-Ahead";   // exact text in PRODUCT_CODE
       const LONG_TERM_NAME = "Long Term";
 
       const barColor = [];
@@ -126,8 +118,8 @@
 
       uniqueProducts.forEach(p => {
         if (p === DAY_AHEAD_NAME) {
-          barColor.push("#93C47D");   // Day Ahead bar (green)
-          lineColor.push("#7F7F7F");  // Day Ahead line (gray)
+          barColor.push("#93C47D");   // Day-Ahead bar (green)
+          lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
         } else if (p === LONG_TERM_NAME) {
           barColor.push("#F9CCCC");   // Long Term bar (light pink)
           lineColor.push("#000000");  // Long Term line (black)
@@ -144,16 +136,19 @@
       };
     }
 
+    // -----------------------------
+    // LIFECYCLE
+    // -----------------------------
     connectedCallback() {
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
         .then(() => {
           this._SourceData = {
-            Products: [],
-            Date: [],
-            ProductCategory: [],
-            ClearingPrice: [],
-            SpreadCapture: []
+            DATE: [],
+            PRODUCT_CODE: [],
+            PRODUCT_CATEGORY: [],
+            CLEARING_PRICE: [],
+            SPREAD_CAPTURE: []
           };
 
           this._LabelData = { UniqueDate: [] };
@@ -184,6 +179,9 @@
       this._shadow.innerHTML = `<div style="font:14px sans-serif;padding:8px;color:#b00020">${msg}</div>`;
     }
 
+    // -----------------------------
+    // DATASETS & RENDERING
+    // -----------------------------
     _buildDatasets() {
       const dates = this._LabelData.UniqueDate;
       const src = this._SourceData;
@@ -195,30 +193,29 @@
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
-        for (let i = 0; i < src.Date.length; i++) {
-          if (src.Products[i] !== prodName) continue;
+        for (let i = 0; i < src.DATE.length; i++) {
+          if (src.PRODUCT_CODE[i] !== prodName) continue;
 
-          const date = src.Date[i];
+          const date = src.DATE[i];
           const pos = dates.indexOf(date);
           if (pos === -1) continue;
 
-          barData[pos]  = src.ClearingPrice[i];
-          lineData[pos] = src.SpreadCapture[i];
+          barData[pos]  = src.CLEARING_PRICE[i];
+          lineData[pos] = src.SPREAD_CAPTURE[i];
         }
 
-        const isLongTerm = prodName === "Day-Ahead";
-        
-        // Use colors from the ProductListData which has correct mapping
-        const barBgColor = plist.BarColour[idx];
-        const labelBgColor = isLongTerm ? "#93C47D" : "#F9CCCC";
-        const lineBorderColor = plist.LineColour[idx];
-        const labelBgColor_1 = isLongTerm ? "#7F7F7F" : "#000000"
+        // PRODUCT_CODE == "Day-Ahead"
+        const isDayAhead = prodName === "Day-Ahead";
 
-        // BAR DATASET
+        const barBgColor   = plist.BarColour[idx];
+        const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
+        const lineBorderColor = plist.LineColour[idx];
+        const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
+
+        // BAR DATASET (CLEARING_PRICE)
         datasets.push({
           type: "bar",
           label: prodName + " Clearing Price",
-          // display: (ctx) => ctx.dataset.data[ctx.dataIndex] != null,
           display: "auto",
           data: barData,
           backgroundColor: labelBgColor,
@@ -243,42 +240,37 @@
               weight: "bold",
               size: 11
             },
-            // formatter: (v) => v == null ? "" : "€ " + v.toFixed(2)
             formatter: (v) => {
-              if (v == null || isNaN(v)) return null; // prevents label box from rendering
+              if (v == null || isNaN(v)) return null;
               return "€ " + v.toFixed(2);
             }
-
           }
         });
 
-        // LINE DATASET
+        // LINE DATASET (SPREAD_CAPTURE %)
         datasets.push({
           type: "line",
           label: prodName + " Spread Capture %",
           data: lineData,
-          // display: (ctx) => ctx.dataset.data[ctx.dataIndex] != null,
           display: "auto",
           yAxisID: "y1",
           borderColor: labelBgColor_1,
-          backgroundColor: "lineBorderColor",
+          backgroundColor: lineBorderColor,
           tension: 0,
           stepped: false,
           pointRadius: 4,
           pointHoverRadius: 5,
           pointBorderWidth: 2,
-          pointBackgroundColor: "#7F7F7F", // grey points
+          pointBackgroundColor: "#7F7F7F",
           borderWidth: 2,
           order: 0,
           z: 10,
           datalabels: {
             align: "top",
             anchor: "end",
-            // offset: 4,
             offset: (ctx) => {
               const i = ctx.dataIndex;
               const hasBar = barData[i] != null;
-              // if there is a bar at this x, push the line label far above it
               return hasBar ? -20 : 4;
             },
             color: "#ffffff",
@@ -294,7 +286,7 @@
               weight: "bold",
               size: 11
             },
-            formatter: (v) => v == null ? "" : v.toFixed(0) + "%"
+            formatter: (v) => v == null || isNaN(v) ? "" : v.toFixed(0) + "%"
           }
         });
       });
@@ -322,9 +314,7 @@
           interaction: { mode: "index", intersect: false },
           animation: false,
           layout: {
-            padding: {
-              top: 40
-            }
+            padding: { top: 40 }
           },
           plugins: {
             title: {
@@ -333,10 +323,7 @@
               font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
-              padding: {
-                top: 10,
-                bottom: 30
-              }
+              padding: { top: 10, bottom: 30 }
             },
             legend: {
               position: "bottom",
@@ -359,44 +346,27 @@
                 }
               }
             },
-            // tooltip: {
-            //   mode: "index",
-            //   intersect: false,
-            //   callbacks: {
-            //     label: (ctx) => {
-            //       const dsLabel = ctx.dataset.label || "";
-            //       const v = ctx.parsed.y;
-            //       if (dsLabel.includes("Spread Capture")) {
-            //         return dsLabel + ": " + (v != null ? v.toFixed(0) + "%" : "");
-            //       }
-            //       return dsLabel + ": " + (v != null ? "€ " + v.toFixed(2) : "");
-            //     }
-            //   }
-            // },
-              tooltip: {
-                mode: "index",
-                intersect: false,
-                filter: (ctx) => {
-                  const v = ctx.parsed?.y;
-                  return v !== null && v !== undefined && !isNaN(v);
-                },
-                callbacks: {
-                  label: (ctx) => {
-                    const dsLabel = ctx.dataset.label || "";
-                    const v = ctx.parsed.y;
-
-                    if (v == null || isNaN(v)) return null;
-
-                    if (dsLabel.includes("Spread Capture")) {
-                      return dsLabel + ": " + v.toFixed(0) + "%";
-                    }
-                    return dsLabel + ": € " + v.toFixed(2);
-                  }
-                }
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              filter: (ctx) => {
+                const v = ctx.parsed?.y;
+                return v !== null && v !== undefined && !isNaN(v);
               },
-
+              callbacks: {
+                label: (ctx) => {
+                  const dsLabel = ctx.dataset.label || "";
+                  const v = ctx.parsed.y;
+                  if (v == null || isNaN(v)) return null;
+                  if (dsLabel.includes("Spread Capture")) {
+                    return dsLabel + ": " + v.toFixed(0) + "%";
+                  }
+                  return dsLabel + ": € " + v.toFixed(2);
+                }
+              }
+            },
             datalabels: {
-              display: true,
+              display: true
             }
           },
           scales: {
@@ -405,7 +375,7 @@
               title: { display: true, text: "Clearing Price (EUR)" },
               ticks: {
                 callback: v => "€ " + Number(v).toFixed(0),
-                padding: 20 // Adds spacing to avoid overlap
+                padding: 20
               },
               grid: {
                 drawBorder: false,
@@ -415,10 +385,7 @@
                 borderDash: [],
                 display: true
               },
-              border: {
-                display: false,
-                width: 0
-              }
+              border: { display: false, width: 0 }
             },
             y1: {
               beginAtZero: true,
@@ -430,13 +397,10 @@
               },
               ticks: {
                 callback: v => v.toFixed(0) + "%",
-                padding: 20 // Adds spacing to avoid overlap
+                padding: 20
               },
               title: { display: true, text: "Spread Capture %" },
-              border: {
-                display: false,
-                width: 0
-              }
+              border: { display: false, width: 0 }
             },
             x: {
               grid: {
@@ -446,18 +410,15 @@
                 drawTicks: false,
                 lineWidth: 0
               },
-              border: {
-                display: false,
-                width: 0
-              },
+              border: { display: false, width: 0 },
               ticks: {
                 autoSkip: true,
                 maxRotation: 0,
                 minRotation: 0,
                 display: true,
-                backdropColor: 'transparent', // Removes background box behind tick labels
-                color: '#000000', // Ensures tick text is visible
-                padding: 5 // Adds spacing to avoid overlap
+                backdropColor: "transparent",
+                color: "#000000",
+                padding: 5
               }
             }
           }
