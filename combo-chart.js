@@ -44,8 +44,8 @@
       // Live-model oriented naming
       this._SourceData = this._SourceData || {
         DATE: [],
-        Product_Code: [],
-        Product_Category: [],
+        PRODUCT_CODE: [],
+        PRODUCT_CATEGORY: [],
         CLEARING_PRICE: [],
         SPREAD_CAPTURE: []
       };
@@ -55,8 +55,8 @@
 
         this._SourceData = {
           DATE: [],
-          Product_Code: [],
-          Product_Category: [],
+          PRODUCT_CODE: [],
+          PRODUCT_CATEGORY: [],
           CLEARING_PRICE: [],
           SPREAD_CAPTURE: []
         };
