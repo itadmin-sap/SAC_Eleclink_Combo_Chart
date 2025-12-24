@@ -194,7 +194,6 @@
       this._shadow.innerHTML = `<div style="font:14px sans-serif;padding:8px;color:#b00020">${msg}</div>`;
     }
 
-  
     _buildDatasets() {
       const dates = this._LabelData.UniqueDate;
       const src = this._SourceData;
@@ -320,6 +319,22 @@
 
       return datasets;
     }
+    
+    fireRenderComplete() {
+        alert("Render Complete");
+        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+            bubbles: true,
+            composed: true
+        }));
+    };
+    
+     renderCompletePlugin = {
+      id: 'renderComplete',
+      afterRender(chart) {
+        console.log('Chart rendered (plugin)');
+        onChartRendered();
+      }
+    };
 
     _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
@@ -339,12 +354,12 @@
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
-          // animation: false,
-          animation: {
-              onComplete: function() {
-                this.fireRenderComplete();
-              }
-          },
+          animation: false,
+          // animation: {
+          //     onComplete: function() {
+          //       this.fireRenderComplete();
+          //     }
+          // },
           layout: {
             padding: { top: 35 , right: 0, bottom: 0, left: 0}
           },
@@ -455,7 +470,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels]
+        plugins: [window.ChartDataLabels,renderCompletePlugin]
       });
       
     }
@@ -463,11 +478,3 @@
   }
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
-
-function fireRenderComplete() {
-    alert("Render Complete");
-    this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
-        bubbles: true,
-        composed: true
-    }));
-};
