@@ -31,6 +31,11 @@
       const container = document.createElement("div");
       Object.assign(container.style, { width: "100%", height: "100%", display: "flex" });
 
+      const event = new CustomEvent("customWidgetRenderComplete", {
+                bubbles: true,   // Allow event to bubble up
+                composed: true   // Allow event to cross shadow DOM boundary
+            });
+
       this._canvas = document.createElement("canvas");
       Object.assign(this._canvas.style, { width: "100%", height: "100%" });
       container.appendChild(this._canvas);
@@ -180,7 +185,9 @@
 
     disconnectedCallback() { this._destroy(); }
     onCustomWidgetResize() { if (this._chart?.resize) this._chart.resize(); }
-
+    // customWidgetRenderComplete(){
+    //   console.log("Redner compelete");
+    // }
     _destroy() {
       if (this._chart?.destroy) this._chart.destroy();
       this._chart = null;
@@ -448,8 +455,9 @@
         },
         plugins: [window.ChartDataLabels]
       });
+      this.dispatchEvent(event);
     }
+    // customWidgetRenderComplete()
   }
-  
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
