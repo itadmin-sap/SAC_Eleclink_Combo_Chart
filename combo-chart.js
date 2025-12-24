@@ -342,7 +342,7 @@
           // animation: false,
           animation: {
               onComplete: function() {
-                alert('Line Chart Rendered Completely!');
+                this.fireRenderComplete();
               }
           },
           layout: {
@@ -464,9 +464,10 @@
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
 
-// function fireRenderComplete() {
-//     this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
-//         bubbles: true,
-//         composed: true
-//     }));
-// };
+function fireRenderComplete() {
+    alert("Render Complete");
+    this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+        bubbles: true,
+        composed: true
+    }));
+};
