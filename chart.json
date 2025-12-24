@@ -6,15 +6,15 @@
   "license": "",
   "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
   "newInstancePrefix": "ChartPOC",
+  "supportsViewportLoading" : true,
+  "supportsExport" : true,
   "webcomponents": [
     {
       "kind": "main",
       "url": "https://itadmin-sap.github.io/SAC_Eleclink_Combo_Chart/combo-chart.js",
       "tag": "perci-combo-chart",
       "integrity": "",
-      "ignoreIntegrity": true,
-     "supportsViewportLoading" : true,
-     "supportsExport" : true
+      "ignoreIntegrity": true
     }
   ],
   "properties": {
