@@ -31,10 +31,7 @@
       const container = document.createElement("div");
       Object.assign(container.style, { width: "100%", height: "100%", display: "flex" });
 
-      const event = new CustomEvent("customWidgetRenderComplete", {
-                bubbles: true,   // Allow event to bubble up
-                composed: true   // Allow event to cross shadow DOM boundary
-            });
+      
 
       this._canvas = document.createElement("canvas");
       Object.assign(this._canvas.style, { width: "100%", height: "100%" });
@@ -342,7 +339,12 @@
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
-          animation: false,
+          // animation: false,
+          animation: {
+              onComplete: function() {
+                alert('Line Chart Rendered Completely!');
+              }
+          },
           layout: {
             padding: { top: 35 , right: 0, bottom: 0, left: 0}
           },
@@ -455,9 +457,16 @@
         },
         plugins: [window.ChartDataLabels]
       });
-      this.dispatchEvent(event);
+      
     }
     // customWidgetRenderComplete()
   }
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
+
+// function fireRenderComplete() {
+//     this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+//         bubbles: true,
+//         composed: true
+//     }));
+// };
