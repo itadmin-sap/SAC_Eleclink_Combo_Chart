@@ -23,22 +23,6 @@
     });
   }
 
-  function fireRenderComplete() {
-        alert("Render Complete");
-        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
-            bubbles: true,
-            composed: true
-        }));
-    };
-    
-    const renderCompletePlugin = {
-      id: 'renderComplete',
-      afterRender(chart) {
-        console.log('Chart rendered (plugin)');
-        fireRenderComplete();
-      }
-    };
-
   class PerciComboChart extends HTMLElement {
     constructor() {
       super();
@@ -481,3 +465,20 @@
   }
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
+
+
+function fireRenderComplete() {
+        alert("Render Complete");
+        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+            bubbles: true,
+            composed: true
+        }));
+    };
+    
+    const renderCompletePlugin = {
+      id: 'renderComplete',
+      afterRender(chart) {
+        console.log('Chart rendered (plugin)');
+        fireRenderComplete();
+      }
+    };
