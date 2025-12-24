@@ -62,12 +62,7 @@
         };
 
         rows.forEach(r => {
-          // Map SAC binding positions to live model fields:
-          // DATE              -> dimensions_0.label
-          // PRODUCT_CODE      -> dimensions_1.label
-          // PRODUCT_CATEGORY  -> dimensions_2.label
-          // CLEARING_PRICE    -> measures_0
-          // SPREAD_CAPTURE    -> measures_1
+    
           const DATE             = r["dimensions_0"]?.label ?? "";
           const PRODUCT_CODE     = r["dimensions_1"]?.label ?? "";
           const PRODUCT_CATEGORY = r["dimensions_2"]?.label ?? "";
@@ -109,7 +104,7 @@
     }
 
     _buildProductList(uniqueProducts) {
-      const DAY_AHEAD_NAME = "Day-Ahead";   // exact text in PRODUCT_CODE
+      const DAY_AHEAD_NAME = "Day-Ahead";   
       const LONG_TERM_NAME = "Long Term";
 
       const OTHER_COLORS = [ 
@@ -126,17 +121,15 @@
 
       uniqueProducts.forEach(p => {
         if (p === DAY_AHEAD_NAME) {
-          barColor.push("#93C47D");   // Day-Ahead bar (green)
-          lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
+          barColor.push("#93C47D");   
+          lineColor.push("#7F7F7F"); 
         } else if (p === LONG_TERM_NAME) {
-          // barColor.push("#F9CCCC");   // Long Term bar (light pink)
+  
           const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
           otherColorIndex += 1;
           barColor.push(c);
           lineColor.push(c);
-          // lineColor.push("#000000");  // Long Term line (black)
         } else {
-      // Other products: also use the list (or keep your own rule here)
           const c = OTHER_COLORS[otherColorIndex % OTHER_COLORS.length];
           otherColorIndex += 1;
           barColor.push(c);
@@ -182,9 +175,7 @@
 
     disconnectedCallback() { this._destroy(); }
     onCustomWidgetResize() { if (this._chart?.resize) this._chart.resize(); }
-    // customWidgetRenderComplete(){
-    //   console.log("Redner compelete");
-    // }
+
     _destroy() {
       if (this._chart?.destroy) this._chart.destroy();
       this._chart = null;
@@ -205,13 +196,6 @@
         const barData = new Array(dates.length).fill(null);
         const lineData = new Array(dates.length).fill(null);
 
-        // const OTHER_COLORS = [ 
-        //   "#F9CCCC", "#46b1e1", "#ff8b8b", "#215f9a",
-        //   "#611bacff", "#CAFCF8", "#E8EED8", "#FAF5CC", 
-        //   "#c19af8ff", "#F8CECE", "#D5CDF9" ];
-
-        // let otherColorIndex  = 0;
-
         for (let i = 0; i < src.DATE.length; i++) {
           if (src.PRODUCT_CODE[i] !== prodName) continue;
 
@@ -223,19 +207,10 @@
           lineData[pos] = src.SPREAD_CAPTURE[i];
         }
 
-        // PRODUCT_CATEGORY == "Day Ahead"
-        // const isDayAhead = prodName === "Day-Ahead";
-
-        // const barBgColor   = plist.BarColour[idx];
-        // const labelBgColor = isDayAhead ? "#93C47D" : "#F9CCCC";
-        // const lineBorderColor = plist.LineColour[idx];
-        // const labelBgColor_1  = isDayAhead ? "#7F7F7F" : "#000000";
-
         const barBgColor      = plist.BarColour[idx];
         const lineBorderColor = plist.LineColour[idx];
 
         const labelBgColor   = barBgColor;
-        // if the line is the gray Day-Ahead line, keep gray labels; otherwise black
         const labelBgColor_1 = lineBorderColor === "#7F7F7F" ? "#7F7F7F" : "#000000";
 
         // BAR DATASET (CLEARING_PRICE)
@@ -457,7 +432,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels,renderCompletePlugin]
+        plugins: [window.ChartDataLabels]
       });
       
     }
@@ -467,18 +442,18 @@
 })();
 
 
-function fireRenderComplete() {
-        alert("Render Complete");
-        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
-            bubbles: true,
-            composed: true
-        }));
-    };
+// function fireRenderComplete() {
+//         alert("Render Complete");
+//         this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+//             bubbles: true,
+//             composed: true
+//         }));
+//     };
     
-    const renderCompletePlugin = {
-      id: 'renderComplete',
-      afterRender(chart) {
-        console.log('Chart rendered (plugin)');
-        fireRenderComplete();
-      }
-    };
+//     const renderCompletePlugin = {
+//       id: 'renderComplete',
+//       afterRender(chart) {
+//         console.log('Chart rendered (plugin)');
+//         fireRenderComplete();
+//       }
+//     };
