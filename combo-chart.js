@@ -450,6 +450,6 @@
       });
     }
   }
-
+  //  pdf export 
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
