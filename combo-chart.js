@@ -23,6 +23,22 @@
     });
   }
 
+  function fireRenderComplete() {
+        alert("Render Complete");
+        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
+            bubbles: true,
+            composed: true
+        }));
+    };
+    
+    const renderCompletePlugin = {
+      id: 'renderComplete',
+      afterRender(chart) {
+        console.log('Chart rendered (plugin)');
+        fireRenderComplete();
+      }
+    };
+
   class PerciComboChart extends HTMLElement {
     constructor() {
       super();
@@ -320,21 +336,8 @@
       return datasets;
     }
     
-    fireRenderComplete() {
-        alert("Render Complete");
-        this.dispatchEvent(new CustomEvent("customWidgetRenderComplete", {
-            bubbles: true,
-            composed: true
-        }));
-    };
-    
-     renderCompletePlugin = {
-      id: 'renderComplete',
-      afterRender(chart) {
-        console.log('Chart rendered (plugin)');
-        onChartRendered();
-      }
-    };
+   
+
 
     _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
