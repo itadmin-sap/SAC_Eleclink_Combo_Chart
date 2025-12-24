@@ -12,12 +12,12 @@
       "url": "https://itadmin-sap.github.io/SAC_Eleclink_Combo_Chart/combo-chart.js",
       "tag": "perci-combo-chart",
       "integrity": "",
-      "ignoreIntegrity": true
+      "ignoreIntegrity": true,
+     "supportsViewportLoading" : true,
+     "supportsExport" : true
     }
   ],
   "properties": {
-     "supportsViewportLoading" : true,
-     "supportsExport" : true
   },
   "dataBindings": {
     "main": {
