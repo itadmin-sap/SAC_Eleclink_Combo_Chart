@@ -91,6 +91,13 @@
         });
       }
 
+      if (!this._SourceData.DATE.length) {
+        this._LabelData = { UniqueDate: [] };
+        this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+        this._render(); // Render blank chart
+        return;
+      }
+
       if (this._SourceData && Array.isArray(this._SourceData.DATE)) {
         this._buildMetaFromSource();
       }
@@ -321,6 +328,14 @@
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
 
       const dates  = this._LabelData.UniqueDate;
+
+       // NEW: Handle no data case (early exit, blank chart)
+      if (!dates.length) {
+        this._destroy();
+        return;
+      }
+
+      
       const labels = dates.map(d => d);
 
       const datasets = this._buildDatasets();
