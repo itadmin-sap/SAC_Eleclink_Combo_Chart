@@ -6,7 +6,6 @@
   "license": "",
   "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
   "newInstancePrefix": "ChartPOC",
-  "supportsViewportLoading" : true,
   "supportsExport" : true,
   "webcomponents": [
     {
