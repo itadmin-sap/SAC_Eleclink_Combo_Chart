@@ -1,7 +1,7 @@
 {
   "id": "com.percipere.combochart",
-  "name": "Combo Bar-Line Chart QA" ,
-  "version": "3.0.0",
+  "name": "Combo Bar-Line Chart",
+  "version": "1.0.0",
   "vendor": "Percipere",
   "license": "",
   "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
@@ -10,7 +10,7 @@
   "webcomponents": [
     {
       "kind": "main",
-      "url": "https://itadmin-sap.github.io/SAC_Eleclink_Combo_Chart/QA/combo-chart-QA.js",
+      "url": "https://itadmin-sap.github.io/SAC_Eleclink_Combo_Chart/Prod/combo-chart.js",
       "tag": "perci-combo-chart",
       "integrity": "",
       "ignoreIntegrity": true
