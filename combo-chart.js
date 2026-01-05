@@ -180,13 +180,22 @@
         );
     }
 
-    onCustomWidgetAfterUpdate() {
-      this._updateSourceFromBinding(this.main);
-      this._render();
+    // onCustomWidgetAfterUpdate() {
+    //   this._updateSourceFromBinding(this.main);
+    //   this._render();
+    // }
+
+    onCustomWidgetAfterUpdate(changes) {
+      setTimeout(() => {
+        this._updateSourceFromBinding(this.main);
+        this._render();
+      }, 50); 
     }
 
     disconnectedCallback() { this._destroy(); }
     onCustomWidgetResize() { if (this._chart?.resize) this._chart.resize(); }
+
+
 
     _destroy() {
       if (this._chart?.destroy) this._chart.destroy();
