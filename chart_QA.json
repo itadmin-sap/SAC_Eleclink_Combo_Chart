@@ -1,6 +1,6 @@
 {
   "id": "com.percipere.combochart",
-  "name": "Combo Bar-Line Chart QA",
+  "name": "Combo Bar-Line Chart QA" ,
   "version": "1.0.0",
   "vendor": "Percipere",
   "license": "",
@@ -19,10 +19,10 @@
   "properties": {
   },
   "dataBindings": {
-    "QA": {
+    "main": {
       "feeds": [
         { "id": "dimensions", "type": "dimension", "description": "Category (e.g., Month)" },
-        { "id": "measures",   "type": "QAStructureMember", "description": "Pick 1–2 measures (Bar = #1, Line = #2)" }
+        { "id": "measures",   "type": "mainStructureMember", "description": "Pick 1–2 measures (Bar = #1, Line = #2)" }
       ]
     }
   },
