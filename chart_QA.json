@@ -1,7 +1,7 @@
 {
   "id": "com.percipere.combochart",
   "name": "Combo Bar-Line Chart QA" ,
-  "version": "1.0.0",
+  "version": "3.0.0",
   "vendor": "Percipere",
   "license": "",
   "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
