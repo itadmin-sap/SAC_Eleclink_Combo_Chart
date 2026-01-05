@@ -1,0 +1,31 @@
+{
+  "id": "com.percipere.combochart",
+  "name": "Combo Bar-Line Chart QA",
+  "version": "1.0.0",
+  "vendor": "Percipere",
+  "license": "",
+  "description": "Simple combo (bar + line) chart with hardcoded data using Chart.js.",
+  "newInstancePrefix": "ChartPOC",
+  "supportsExport" : true,
+  "webcomponents": [
+    {
+      "kind": "QA",
+      "url": "https://itadmin-sap.github.io/SAC_Eleclink_Combo_Chart/combo-chart.js",
+      "tag": "perci-combo-chart",
+      "integrity": "",
+      "ignoreIntegrity": true
+    }
+  ],
+  "properties": {
+  },
+  "dataBindings": {
+    "QA": {
+      "feeds": [
+        { "id": "dimensions", "type": "dimension", "description": "Category (e.g., Month)" },
+        { "id": "measures",   "type": "QAStructureMember", "description": "Pick 1–2 measures (Bar = #1, Line = #2)" }
+      ]
+    }
+  },
+  "methods": {},
+  "events": {}
+}
