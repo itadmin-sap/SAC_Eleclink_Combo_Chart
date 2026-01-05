@@ -324,24 +324,252 @@
       return datasets;
     }
 
-    _render() {
+  //   _render() {
+  //     if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
+
+  //     const dates  = this._LabelData.UniqueDate;
+
+  //      // NEW: Handle no data case (early exit, blank chart)
+  //     if (!dates.length) {
+  //       this._destroy();
+  //       return;
+  //     }
+
+
+  //     const labels = dates.map(d => d);
+
+  //     const datasets = this._buildDatasets();
+
+  //     this._destroy();
+  //     const ctx = this._canvas.getContext("2d");
+
+  //     this._chart = new window.Chart(ctx, {
+  //       type: "bar",
+  //       data: { labels, datasets },
+  //       options: {
+  //         responsive: true,
+  //         maintainAspectRatio: false,
+  //         interaction: { mode: "index", intersect: false },
+  //         animation: false,
+  //         layout: {
+  //           padding: { top: 35 , right: 0, bottom: 0, left: 0}
+  //         },
+  //         plugins: {
+  //           title: {
+  //             display: true,
+  //             text: "SPREAD CAPTURE VS CLEARING PRICE",
+  //             font: { size: 20, weight: "bold" },
+  //             align: "center",
+  //             color: "#000000",
+  //             padding: { top:2, bottom: 30}
+  //           },
+  //           legend: {
+  //             position: "bottom",
+  //             align: "center",
+  //             labels: {
+  //               usePointStyle: true,
+  //               padding: 18,
+  //               boxWidth: 30,
+  //               font: { size: 11 },
+  //               generateLabels: (chart) => {
+  //                 const base =
+  //                   Chart.defaults.plugins.legend.labels.generateLabels(chart);
+  //                 return base.map(l => {
+  //                   const ds = chart.data.datasets[l.datasetIndex];
+  //                   return {
+  //                     ...l,
+  //                     pointStyle: ds.type === "line" ? "line" : "rect"
+  //                   };
+  //                 });
+  //               }
+  //             }
+  //           },
+  //           tooltip: {
+  //             mode: "index",
+  //             intersect: false,
+  //             filter: (ctx) => {
+  //               const v = ctx.parsed?.y;
+  //               return v !== null && v !== undefined && !isNaN(v);
+  //             },
+  //             callbacks: {
+  //               label: (ctx) => {
+  //                 const dsLabel = ctx.dataset.label || "";
+  //                 const v = ctx.parsed.y;
+  //                 if (v == null || isNaN(v)) return null;
+  //                 if (dsLabel.includes("Spread Capture")) {
+  //                   return dsLabel + ": " + v.toFixed(0) + "%";
+  //                 }
+  //                 return dsLabel + ": € " + v.toFixed(2);
+  //               }
+  //             }
+  //           },
+  //           datalabels: {
+  //             display: true
+  //           }
+  //         },
+  //         scales: {
+  //           y: {
+  //             beginAtZero: true,
+  //             title: { display: true, text: "" },
+  //             ticks: {
+  //               callback: v => "€ " + Number(v).toFixed(0),
+  //               padding: 20
+  //             },
+  //             grid: {
+  //               drawBorder: false,
+  //               drawOnChartArea: true,
+  //               drawTicks: false,
+  //               color: "#e0e0e0",
+  //               borderDash: [],
+  //               display: true
+  //             },
+  //             border: { display: false, width: 0 }
+  //           },
+  //           y1: {
+  //             beginAtZero: true,
+  //             position: "right",
+  //             grid: { 
+  //               drawOnChartArea: false,
+  //               drawBorder: false,
+  //               drawTicks: false
+  //             },
+  //             ticks: {
+  //               callback: v => v.toFixed(0) + "%",
+  //               padding: 20
+  //             },
+  //             title: { display: true, text: "" },
+  //             border: { display: false, width: 0 }
+  //           },
+  //           x: {
+  //             grid: {
+  //               display: false,
+  //               drawBorder: false,
+  //               drawOnChartArea: false,
+  //               drawTicks: false,
+  //               lineWidth: 0
+  //             },
+  //             border: { display: false, width: 0 },
+  //             ticks: {
+  //               autoSkip: true,
+  //               maxRotation: 0,
+  //               minRotation: 0,
+  //               display: true,
+  //               backdropColor: "transparent",
+  //               color: "#000000",
+  //               padding: 5
+  //             }
+  //           }
+  //         }
+  //       },
+  //       plugins: [window.ChartDataLabels]
+  //     });
+  //   }
+
+  _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
 
-      const dates  = this._LabelData.UniqueDate;
-
-       // NEW: Handle no data case (early exit, blank chart)
-      if (!dates.length) {
-        this._destroy();
-        return;
-      }
-
-      
-      const labels = dates.map(d => d);
-
-      const datasets = this._buildDatasets();
+      const dates = this._LabelData.UniqueDate;
 
       this._destroy();
       const ctx = this._canvas.getContext("2d");
+
+      // Handle no data case - show title + axes structure
+      if (!dates.length) {
+        const labels = [];
+        const datasets = [];
+
+        this._chart = new window.Chart(ctx, {
+          type: "bar",
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            animation: false,
+            layout: {
+              padding: { top: 35, right: 0, bottom: 0, left: 0}
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: "SPREAD CAPTURE VS CLEARING PRICE",
+                font: { size: 20, weight: "bold" },
+                align: "center",
+                color: "#000000",
+                padding: { top:2, bottom: 30}
+              },
+              legend: {
+                display: false  // Hide empty legend
+              },
+              tooltip: {
+                enabled: false  // Disable tooltips
+              },
+              datalabels: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: "" },
+                ticks: {
+                  callback: v => "€ " + Number(v).toFixed(0),
+                  padding: 20
+                },
+                grid: {
+                  drawBorder: false,
+                  drawOnChartArea: true,
+                  drawTicks: false,
+                  color: "#e0e0e0",
+                  borderDash: [],
+                  display: true
+                },
+                border: { display: false, width: 0 }
+              },
+              y1: {
+                beginAtZero: true,
+                position: "right",
+                grid: { 
+                  drawOnChartArea: false,
+                  drawBorder: false,
+                  drawTicks: false
+                },
+                ticks: {
+                  callback: v => v.toFixed(0) + "%",
+                  padding: 20
+                },
+                title: { display: true, text: "" },
+                border: { display: false, width: 0 }
+              },
+              x: {
+                grid: {
+                  display: false,
+                  drawBorder: false,
+                  drawOnChartArea: false,
+                  drawTicks: false,
+                  lineWidth: 0
+                },
+                border: { display: false, width: 0 },
+                ticks: {
+                  autoSkip: true,
+                  maxRotation: 0,
+                  minRotation: 0,
+                  display: true,
+                  backdropColor: "transparent",
+                  color: "#000000",
+                  padding: 5
+                }
+              }
+            }
+          },
+          plugins: [window.ChartDataLabels]
+        });
+        return;
+      }
+
+      // Normal data rendering (unchanged)
+      const labels = dates.map(d => d);
+      const datasets = this._buildDatasets();
 
       this._chart = new window.Chart(ctx, {
         type: "bar",
@@ -468,3 +696,7 @@
   
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
+//   }
+  
+//   // customElements.define("perci-combo-chart", PerciComboChart);
+// })();
