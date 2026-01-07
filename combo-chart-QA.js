@@ -167,14 +167,51 @@
       };
     }
 
+    set main(v) {
+      this._main = v;
+
+      console.log("Main binding updated (filter change likely).", v);
+
+      // SAC can push binding before scripts load, so guard.
+      if (!this._isReady) return;
+
+      // Reuse your existing logic exactly
+      this._updateSourceFromBinding(this._main);
+
+      // Re-render
+      this._render();
+    }
+
+    get main() {
+      return this._main;
+    }
+
+
 
     connectedCallback() {
       loadScriptSequential(CDN_CANDIDATES)
-        .then(() => loadScriptSequential(DATALABELS_CDNS))
-        .then(() => this._refreshBindingAndRender())
-        .catch(err =>
-          this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
-        );
+    .then(() => loadScriptSequential(DATALABELS_CDNS))
+    .then(() => {
+      this._isReady = true;
+
+      this._SourceData = {
+        DATE: [],
+        PRODUCT_CODE: [],
+        PRODUCT_CATEGORY: [],
+        CLEARING_PRICE: [],
+        SPREAD_CAPTURE: []
+      };
+
+      this._LabelData = { UniqueDate: [] };
+      this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+
+      // IMPORTANT: use the property you stored, not this.main directly
+      this._updateSourceFromBinding(this._main);
+      this._render();
+    })
+    .catch(err =>
+      this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
+    );
     }
 
     onCustomWidgetAfterUpdate() {
