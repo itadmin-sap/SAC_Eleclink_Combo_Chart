@@ -39,6 +39,24 @@
       this._chart = null;
     }
 
+    async _refreshBindingAndRender() {
+      try {
+        console.log("Filtered rows:", (rows || []).length, rows?.[0]);
+        const db = this.dataBindings?.getDataBinding?.("main");
+        if (!db) return;
+
+        // Get fresh rows (some tenants return sync array, some return Promise)
+        const rows = await Promise.resolve(db.getData ? db.getData() : db.data);
+
+        // Keep your existing core logic: just pass an object shaped like { data: [...] }
+        this._updateSourceFromBinding({ data: rows || [] });
+        this._render();
+      } catch (e) {
+        console.error("Binding refresh failed:", e);
+  }
+}
+
+
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
         DATE: [],
@@ -153,29 +171,14 @@
     connectedCallback() {
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
-        .then(() => {
-          this._SourceData = {
-            DATE: [],
-            PRODUCT_CODE: [],
-            PRODUCT_CATEGORY: [],
-            CLEARING_PRICE: [],
-            SPREAD_CAPTURE: []
-          };
-
-          this._LabelData = { UniqueDate: [] };
-          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
-
-          this._updateSourceFromBinding(this.main);
-          this._render();
-        })
+        .then(() => this._refreshBindingAndRender())
         .catch(err =>
           this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
         );
     }
 
     onCustomWidgetAfterUpdate() {
-      this._updateSourceFromBinding(this.main);
-      this._render();
+      setTimeout(() => this._refreshBindingAndRender(), 0);
     }
 
     disconnectedCallback() { this._destroy(); }
