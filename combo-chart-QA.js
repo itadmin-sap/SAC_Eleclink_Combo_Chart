@@ -98,7 +98,7 @@
 
     _buildMetaFromSource() {
       const src = this._SourceData;
-
+      console.log("Source Data:", src);
       const uniqueDates = Array.from(new Set(src.DATE));
       const uniqueProducts = Array.from(new Set(src.PRODUCT_CODE));
 
