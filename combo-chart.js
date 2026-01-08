@@ -463,7 +463,7 @@
           order: 0,
           z: 10,
           datalabels: {
-            align: "bottom",
+            align: "top",
             anchor: "end",
             xAlign: "left",
             offset: (ctx) => {
