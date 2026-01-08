@@ -315,12 +315,6 @@
         this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
 
         this._updateSourceFromBinding(this.main);
-        const dates = this._LabelData?.UniqueDate || [];
-        if (!ok || dates.length === 0) {
-          // this._destroy();
-          this._showEmpty("No data", "Try adjusting the story filters or date range");
-          return;
-        }
         this._render();
       })
 
@@ -348,8 +342,9 @@
   const hasData = Array.isArray(dates) && dates.length > 0;
 
   if (!ok || !hasData) {
-    // this._destroy();
-    this._showEmpty("No data", "Try adjusting the story filters or date range");
+    this._destroy();
+    // this._hideOverlay();
+    // this._showEmpty("No data", "Try adjusting the story filters or date range");
     return;
   }
 
