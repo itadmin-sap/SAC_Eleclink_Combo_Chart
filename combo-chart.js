@@ -466,7 +466,34 @@
             align: "bottom",
             anchor: "end",
             xAlign: "left",
-            offset: 6,
+            offset: (ctx) => {
+              const chart = ctx.chart;
+              const i = ctx.dataIndex;
+
+              const vLine = ctx.dataset.data?.[i];
+              if (vLine == null || isNaN(vLine)) return 6;
+
+              // bar dataset for this product is pushed just before the line dataset
+              const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
+              const vBar = barDs?.data?.[i];
+
+              // if no bar, keep normal spacing
+              if (vBar == null || isNaN(vBar)) return 6;
+
+              const yLeft = chart.scales.y;   // bar axis
+              const yRight = chart.scales.y1; // line axis
+
+              const barY  = yLeft.getPixelForValue(vBar);
+              const lineY = yRight.getPixelForValue(vLine);
+
+              const dist = Math.abs(lineY - barY);
+
+              // If they're close, push the line label further away
+              if (dist < 20) return 26;
+              if (dist < 35) return 18;
+              return 6;
+            },
+
             // offset: (ctx) => {
             //   const i = ctx.dataIndex;
             //   const hasBar = barData[i] != null;
