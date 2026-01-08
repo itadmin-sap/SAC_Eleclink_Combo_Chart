@@ -566,7 +566,7 @@
               }
             },
             datalabels: {
-              display: "auto",   // allow auto-skip when overlapping
+              display: true, 
             }
           },
           scales: {
