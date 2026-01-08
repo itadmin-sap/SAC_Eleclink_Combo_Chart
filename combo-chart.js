@@ -112,7 +112,35 @@
       this._renderToken = 0;             // prevents stale hides
       this._loadingSince = 0;
       this._minLoaderMs = 250;
+      this._emptyDelayMs = 600;    // wait this long before showing "No data"
+      this._pollEveryMs = 50;      // poll interval
+
     }
+
+    _waitForBinding(token) {
+  const start = Date.now();
+
+  return new Promise((resolve) => {
+    const tick = () => {
+      // If a newer update started, stop.
+      if (token !== this._renderToken) return resolve(false);
+
+      const rows = this.main?.data;
+      const hasRows = Array.isArray(rows) && rows.length > 0;
+
+      if (hasRows) return resolve(true);
+
+      if (Date.now() - start >= this._emptyDelayMs) {
+        return resolve(false);
+      }
+
+      setTimeout(tick, this._pollEveryMs);
+    };
+
+    tick();
+  });
+}
+
 
 
     _showLoading(text = "Loading…", sub = "Applying filters and rendering chart") {
@@ -275,14 +303,21 @@
 
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
-        .then(() => {
-          this._SourceData = { DATE: [], PRODUCT_CODE: [], PRODUCT_CATEGORY: [], CLEARING_PRICE: [], SPREAD_CAPTURE: [] };
-          this._LabelData = { UniqueDate: [] };
-          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+        .then(async () => {
+        const token = ++this._renderToken;
+        this._showLoading("Loading…", "Initializing and fetching data");
 
-          this._updateSourceFromBinding(this.main);
-          this._render();
-        })
+        await this._waitForBinding(token);
+        if (token !== this._renderToken) return;
+
+        this._SourceData = { DATE: [], PRODUCT_CODE: [], PRODUCT_CATEGORY: [], CLEARING_PRICE: [], SPREAD_CAPTURE: [] };
+        this._LabelData = { UniqueDate: [] };
+        this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+
+        this._updateSourceFromBinding(this.main);
+        this._render();
+      })
+
         .catch(() => {
           this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.");
         });
@@ -290,11 +325,31 @@
     }
 
 
-    onCustomWidgetAfterUpdate() {
-      this._showLoading("Loading…", "Updating for the latest filter selection");
-      this._updateSourceFromBinding(this.main);
-      this._render(); // _render will hide loader when done
-    }
+    async onCustomWidgetAfterUpdate() {
+  const token = ++this._renderToken;
+
+  this._showLoading("Loading…", "Applying filters and fetching data");
+
+  const ok = await this._waitForBinding(token);
+
+  if (token !== this._renderToken) return; // stale
+
+  // Now binding is either ready or timed out
+  this._updateSourceFromBinding(this.main);
+
+  // If still empty after grace window, show empty
+  const dates = this._LabelData?.UniqueDate || [];
+  const hasData = Array.isArray(dates) && dates.length > 0;
+
+  if (!ok || !hasData) {
+    this._destroy();
+    this._showEmpty("No data", "Try adjusting the story filters or date range");
+    return;
+  }
+
+  this._render();
+}
+
 
 
     disconnectedCallback() { this._destroy(); }
@@ -445,11 +500,6 @@
 
       // If binding is empty, show empty state and destroy chart
       const hasData = Array.isArray(dates) && dates.length > 0;
-      if (!hasData) {
-        this._destroy();
-        this._showEmpty("No data", "Try changing the story filters or date range");
-        return;
-      }
       const datasets = this._buildDatasets();
 
       this._destroy();
