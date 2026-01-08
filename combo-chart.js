@@ -567,8 +567,8 @@
             },
             datalabels: {
               display: "auto",   // allow auto-skip when overlapping
-              clamp: true,       // keep labels within chart area
-              clip: true         // clip labels that still go out
+              // clamp: true,       // keep labels within chart area
+              // clip: true         // clip labels that still go out
             }
           },
           scales: {
