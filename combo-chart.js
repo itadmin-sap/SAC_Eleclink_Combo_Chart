@@ -28,16 +28,127 @@
       super();
       this._shadow = this.attachShadow({ mode: "open" });
 
-      const container = document.createElement("div");
-      Object.assign(container.style, { width: "100%", height: "100%", display: "flex" });
+      const host = document.createElement("div");
+      Object.assign(host.style, {
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        display: "block"
+      });
 
       this._canvas = document.createElement("canvas");
       Object.assign(this._canvas.style, { width: "100%", height: "100%" });
-      container.appendChild(this._canvas);
-      this._shadow.appendChild(container);
+
+      // Overlay (loader + empty state)
+      this._overlay = document.createElement("div");
+      this._overlay.innerHTML = `
+        <style>
+          :host { display:block; width:100%; height:100%; }
+
+          .overlay {
+            position:absolute; inset:0; z-index:10;
+            display:none;
+            align-items:center; justify-content:center;
+            pointer-events:none;
+            background: color-mix(in srgb, var(--sac-bg, #fff) 70%, transparent);
+          }
+
+          .card {
+            display:flex; align-items:center; gap:10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+            background: var(--sac-surface, rgba(255,255,255,0.92));
+            color: var(--sac-text, #222);
+            font: 13px/1.3 sans-serif;
+          }
+
+          .spinner {
+            width:16px;height:16px;
+            border:2px solid rgba(0,0,0,0.25);
+            border-top-color: rgba(0,0,0,0.70);
+            border-radius:50%;
+            animation: perciSpin 0.9s linear infinite;
+          }
+
+          .msg { display:flex; flex-direction:column; gap:2px; }
+          .title { font-weight: 700; font-size: 13px; }
+          .sub { font-weight: 400; font-size: 12px; opacity: 0.85; }
+
+          @keyframes perciSpin { to { transform: rotate(360deg); } }
+
+          /* Dark mode fallback */
+          @media (prefers-color-scheme: dark) {
+            .overlay { background: rgba(0,0,0,0.20); }
+            .card { background: rgba(28,28,28,0.92); color:#eee; }
+            .spinner { border-color: rgba(255,255,255,0.28); border-top-color: rgba(255,255,255,0.85); }
+          }
+        </style>
+
+        <div class="overlay" id="ov">
+          <div class="card" id="card">
+            <span class="spinner" id="spin"></span>
+            <div class="msg" id="msg">
+              <div class="title" id="t">Loading…</div>
+              <div class="sub" id="s">Applying filters and rendering chart</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      host.appendChild(this._canvas);
+      host.appendChild(this._overlay);
+      this._shadow.appendChild(host);
+
+      // Overlay refs
+      this._ov = this._shadow.getElementById("ov");
+      this._spin = this._shadow.getElementById("spin");
+      this._t = this._shadow.getElementById("t");
+      this._s = this._shadow.getElementById("s");
+
 
       this._chart = null;
+      this._renderToken = 0;             // prevents stale hides
     }
+
+
+    _showLoading(text = "Loading…", sub = "Applying filters and rendering chart") {
+      if (!this._ov) return;
+      this._spin.style.display = "inline-block";
+      this._t.textContent = text;
+      this._s.textContent = sub;
+      this._ov.style.display = "flex";
+    }
+
+    _showEmpty(text = "No data", sub = "Try adjusting the story filters") {
+      if (!this._ov) return;
+      this._spin.style.display = "none"; // no spinner for empty state
+      this._t.textContent = text;
+      this._s.textContent = sub;
+      this._ov.style.display = "flex";
+    }
+
+    _hideOverlay() {
+      if (this._ov) this._ov.style.display = "none";
+    }
+
+    _afterNextPaint(token) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (token === this._renderToken) this._hideOverlay();
+        });
+      });
+    }
+
+
+    _showLoader() {
+      if (this._loader) this._loader.style.display = "flex";
+    }
+
+    _hideLoader() {
+      if (this._loader) this._loader.style.display = "none";
+    }
+
 
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
@@ -91,13 +202,6 @@
         });
       }
 
-      if (!this._SourceData.DATE.length) {
-        this._LabelData = { UniqueDate: [] };
-        this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
-        this._render(); // Render blank chart
-        return;
-      }
-
       if (this._SourceData && Array.isArray(this._SourceData.DATE)) {
         this._buildMetaFromSource();
       }
@@ -105,7 +209,7 @@
 
     _buildMetaFromSource() {
       const src = this._SourceData;
-
+      console.log("Source Data:", src);
       const uniqueDates = Array.from(new Set(src.DATE));
       const uniqueProducts = Array.from(new Set(src.PRODUCT_CODE));
 
@@ -158,44 +262,43 @@
 
 
     connectedCallback() {
+      this._showLoading("Loading…", "Initializing chart libraries");
+
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
         .then(() => {
-          this._SourceData = {
-            DATE: [],
-            PRODUCT_CODE: [],
-            PRODUCT_CATEGORY: [],
-            CLEARING_PRICE: [],
-            SPREAD_CAPTURE: []
-          };
-
+          this._SourceData = { DATE: [], PRODUCT_CODE: [], PRODUCT_CATEGORY: [], CLEARING_PRICE: [], SPREAD_CAPTURE: [] };
           this._LabelData = { UniqueDate: [] };
           this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
 
           this._updateSourceFromBinding(this.main);
           this._render();
         })
-        .catch(err =>
-          this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
-        );
+        .catch(() => {
+          this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.");
+        });
+
     }
+
 
     onCustomWidgetAfterUpdate() {
+      this._showLoading("Loading…", "Updating for the latest filter selection");
       this._updateSourceFromBinding(this.main);
-      this._render();
+      this._render(); // _render will hide loader when done
     }
 
-    // onCustomWidgetAfterUpdate(changes) {
-    //   setTimeout(() => {
-    //     this._updateSourceFromBinding(this.main);
-    //     this._render();
-    //   }, 50); 
-    // }
+    _afterNextPaint(token) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // only hide if this is still the latest render cycle
+          if (token === this._renderToken) this._hideLoader();
+        });
+      });
+    }
+
 
     disconnectedCallback() { this._destroy(); }
     onCustomWidgetResize() { if (this._chart?.resize) this._chart.resize(); }
-
-
 
     _destroy() {
       if (this._chart?.destroy) this._chart.destroy();
@@ -333,252 +436,24 @@
       return datasets;
     }
 
-  //   _render() {
-  //     if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
-
-  //     const dates  = this._LabelData.UniqueDate;
-
-  //      // NEW: Handle no data case (early exit, blank chart)
-  //     if (!dates.length) {
-  //       this._destroy();
-  //       return;
-  //     }
-
-
-  //     const labels = dates.map(d => d);
-
-  //     const datasets = this._buildDatasets();
-
-  //     this._destroy();
-  //     const ctx = this._canvas.getContext("2d");
-
-  //     this._chart = new window.Chart(ctx, {
-  //       type: "bar",
-  //       data: { labels, datasets },
-  //       options: {
-  //         responsive: true,
-  //         maintainAspectRatio: false,
-  //         interaction: { mode: "index", intersect: false },
-  //         animation: false,
-  //         layout: {
-  //           padding: { top: 35 , right: 0, bottom: 0, left: 0}
-  //         },
-  //         plugins: {
-  //           title: {
-  //             display: true,
-  //             text: "SPREAD CAPTURE VS CLEARING PRICE",
-  //             font: { size: 20, weight: "bold" },
-  //             align: "center",
-  //             color: "#000000",
-  //             padding: { top:2, bottom: 30}
-  //           },
-  //           legend: {
-  //             position: "bottom",
-  //             align: "center",
-  //             labels: {
-  //               usePointStyle: true,
-  //               padding: 18,
-  //               boxWidth: 30,
-  //               font: { size: 11 },
-  //               generateLabels: (chart) => {
-  //                 const base =
-  //                   Chart.defaults.plugins.legend.labels.generateLabels(chart);
-  //                 return base.map(l => {
-  //                   const ds = chart.data.datasets[l.datasetIndex];
-  //                   return {
-  //                     ...l,
-  //                     pointStyle: ds.type === "line" ? "line" : "rect"
-  //                   };
-  //                 });
-  //               }
-  //             }
-  //           },
-  //           tooltip: {
-  //             mode: "index",
-  //             intersect: false,
-  //             filter: (ctx) => {
-  //               const v = ctx.parsed?.y;
-  //               return v !== null && v !== undefined && !isNaN(v);
-  //             },
-  //             callbacks: {
-  //               label: (ctx) => {
-  //                 const dsLabel = ctx.dataset.label || "";
-  //                 const v = ctx.parsed.y;
-  //                 if (v == null || isNaN(v)) return null;
-  //                 if (dsLabel.includes("Spread Capture")) {
-  //                   return dsLabel + ": " + v.toFixed(0) + "%";
-  //                 }
-  //                 return dsLabel + ": € " + v.toFixed(2);
-  //               }
-  //             }
-  //           },
-  //           datalabels: {
-  //             display: true
-  //           }
-  //         },
-  //         scales: {
-  //           y: {
-  //             beginAtZero: true,
-  //             title: { display: true, text: "" },
-  //             ticks: {
-  //               callback: v => "€ " + Number(v).toFixed(0),
-  //               padding: 20
-  //             },
-  //             grid: {
-  //               drawBorder: false,
-  //               drawOnChartArea: true,
-  //               drawTicks: false,
-  //               color: "#e0e0e0",
-  //               borderDash: [],
-  //               display: true
-  //             },
-  //             border: { display: false, width: 0 }
-  //           },
-  //           y1: {
-  //             beginAtZero: true,
-  //             position: "right",
-  //             grid: { 
-  //               drawOnChartArea: false,
-  //               drawBorder: false,
-  //               drawTicks: false
-  //             },
-  //             ticks: {
-  //               callback: v => v.toFixed(0) + "%",
-  //               padding: 20
-  //             },
-  //             title: { display: true, text: "" },
-  //             border: { display: false, width: 0 }
-  //           },
-  //           x: {
-  //             grid: {
-  //               display: false,
-  //               drawBorder: false,
-  //               drawOnChartArea: false,
-  //               drawTicks: false,
-  //               lineWidth: 0
-  //             },
-  //             border: { display: false, width: 0 },
-  //             ticks: {
-  //               autoSkip: true,
-  //               maxRotation: 0,
-  //               minRotation: 0,
-  //               display: true,
-  //               backdropColor: "transparent",
-  //               color: "#000000",
-  //               padding: 5
-  //             }
-  //           }
-  //         }
-  //       },
-  //       plugins: [window.ChartDataLabels]
-  //     });
-  //   }
-
-  _render() {
+    _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
 
-      const dates = this._LabelData.UniqueDate;
+      const token = ++this._renderToken;   // mark this render as latest
+      const dates  = this._LabelData.UniqueDate;
+      const labels = dates.map(d => d);
+
+      // If binding is empty, show empty state and destroy chart
+      const hasData = Array.isArray(dates) && dates.length > 0;
+      if (!hasData) {
+        this._destroy();
+        this._showEmpty("No data", "Try changing the story filters or date range");
+        return;
+      }
+      const datasets = this._buildDatasets();
 
       this._destroy();
       const ctx = this._canvas.getContext("2d");
-
-      // Handle no data case - show title + axes structure
-      if (!dates.length) {
-        const labels = [];
-        const datasets = [];
-
-        this._chart = new window.Chart(ctx, {
-          type: "bar",
-          data: { labels, datasets },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            animation: false,
-            layout: {
-              padding: { top: 35, right: 0, bottom: 0, left: 0}
-            },
-            plugins: {
-              title: {
-                display: true,
-                text: "SPREAD CAPTURE VS CLEARING PRICE",
-                font: { size: 20, weight: "bold" },
-                align: "center",
-                color: "#000000",
-                padding: { top:2, bottom: 30}
-              },
-              legend: {
-                display: false  // Hide empty legend
-              },
-              tooltip: {
-                enabled: false  // Disable tooltips
-              },
-              datalabels: {
-                display: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: { display: true, text: "" },
-                ticks: {
-                  callback: v => "€ " + Number(v).toFixed(0),
-                  padding: 20
-                },
-                grid: {
-                  drawBorder: false,
-                  drawOnChartArea: true,
-                  drawTicks: false,
-                  color: "#e0e0e0",
-                  borderDash: [],
-                  display: true
-                },
-                border: { display: false, width: 0 }
-              },
-              y1: {
-                beginAtZero: true,
-                position: "right",
-                grid: { 
-                  drawOnChartArea: false,
-                  drawBorder: false,
-                  drawTicks: false
-                },
-                ticks: {
-                  callback: v => v.toFixed(0) + "%",
-                  padding: 20
-                },
-                title: { display: true, text: "" },
-                border: { display: false, width: 0 }
-              },
-              x: {
-                grid: {
-                  display: false,
-                  drawBorder: false,
-                  drawOnChartArea: false,
-                  drawTicks: false,
-                  lineWidth: 0
-                },
-                border: { display: false, width: 0 },
-                ticks: {
-                  autoSkip: true,
-                  maxRotation: 0,
-                  minRotation: 0,
-                  display: true,
-                  backdropColor: "transparent",
-                  color: "#000000",
-                  padding: 5
-                }
-              }
-            }
-          },
-          plugins: [window.ChartDataLabels]
-        });
-        return;
-      }
-
-      // Normal data rendering (unchanged)
-      const labels = dates.map(d => d);
-      const datasets = this._buildDatasets();
 
       this._chart = new window.Chart(ctx, {
         type: "bar",
@@ -700,12 +575,11 @@
         },
         plugins: [window.ChartDataLabels]
       });
+
+      // Fallback: ensure loader hides after canvas has actually painted
+      this._afterNextPaint(token);
     }
   }
   
   customElements.define("perci-combo-chart", PerciComboChart);
 })();
-//   }
-  
-//   // customElements.define("perci-combo-chart", PerciComboChart);
-// })();
