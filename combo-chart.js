@@ -95,6 +95,7 @@
           </div>
         </div>
       `;
+      Object.assign(host.style, { minHeight: "240px" });
 
       host.appendChild(this._canvas);
       host.appendChild(this._overlay);
@@ -109,16 +110,20 @@
 
       this._chart = null;
       this._renderToken = 0;             // prevents stale hides
+      this._loadingSince = 0;
+      this._minLoaderMs = 250;
     }
 
 
     _showLoading(text = "Loading…", sub = "Applying filters and rendering chart") {
       if (!this._ov) return;
+      this._loadingSince = Date.now();
       this._spin.style.display = "inline-block";
       this._t.textContent = text;
       this._s.textContent = sub;
       this._ov.style.display = "flex";
     }
+
 
     _showEmpty(text = "No data", sub = "Try adjusting the story filters") {
       if (!this._ov) return;
@@ -129,8 +134,21 @@
     }
 
     _hideOverlay() {
-      if (this._ov) this._ov.style.display = "none";
+      if (!this._ov) return;
+
+      const elapsed = Date.now() - (this._loadingSince || 0);
+      const wait = Math.max(0, this._minLoaderMs - elapsed);
+
+      if (wait > 0) {
+        setTimeout(() => {
+          // avoid hiding if a newer render started
+          this._ov.style.display = "none";
+        }, wait);
+      } else {
+        this._ov.style.display = "none";
+      }
     }
+
 
     _afterNextPaint(token) {
       requestAnimationFrame(() => {
@@ -138,15 +156,6 @@
           if (token === this._renderToken) this._hideOverlay();
         });
       });
-    }
-
-
-    _showLoader() {
-      if (this._loader) this._loader.style.display = "flex";
-    }
-
-    _hideLoader() {
-      if (this._loader) this._loader.style.display = "none";
     }
 
 
@@ -285,15 +294,6 @@
       this._showLoading("Loading…", "Updating for the latest filter selection");
       this._updateSourceFromBinding(this.main);
       this._render(); // _render will hide loader when done
-    }
-
-    _afterNextPaint(token) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          // only hide if this is still the latest render cycle
-          if (token === this._renderToken) this._hideLoader();
-        });
-      });
     }
 
 
