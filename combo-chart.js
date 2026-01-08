@@ -595,7 +595,8 @@
               }
             },
             datalabels: {
-              display: true, 
+              clamp: true,
+              clip: true
             }
           },
           scales: {
