@@ -37,77 +37,7 @@
       this._shadow.appendChild(container);
 
       this._chart = null;
-      this._db = null;
-      this._dbHandler = null;
-      this._bindingInitTimer = null;
     }
-
-    _initBindingListener() {
-      // Avoid double attach
-      if (this._db && this._dbHandler) return;
-
-      const db = this.dataBindings?.getDataBinding?.("main");
-      if (!db) return false;
-
-      this._db = db;
-
-      // Different SAC tenants expose slightly different APIs; handle both
-      this._dbHandler = () => {
-
-        console.log("DataBinding dataChanged fired");
-        // Reuse your existing logic (no core changes)
-        // Prefer db.getData() if available; else fall back to this.main
-        try {
-          if (db.getData) {
-            const rows = db.getData();
-            console.log("Rows length:", rows?.length);
-            console.log("Sample row:", rows?.[0]);
-            this._updateSourceFromBinding({ data: rows || [] });
-          } else {
-            this._updateSourceFromBinding(this.main);
-          }
-          this._render();
-        } catch (e) {
-          console.error("DataChanged handler failed:", e);
-        }
-      };
-
-      // Attach (most common is attachDataChanged)
-      if (typeof db.attachDataChanged === "function") {
-        db.attachDataChanged(this._dbHandler);
-        console.log("Attached: db.attachDataChanged");
-        return true;
-      }
-
-      // Some environments use addEventListener pattern
-      if (typeof db.addEventListener === "function") {
-        db.addEventListener("dataChanged", this._dbHandler);
-        console.log("Attached: db.addEventListener('dataChanged')");
-        return true;
-      }
-
-      console.warn("No supported dataChanged hook found on data binding:", db);
-      return false;
-    }
-
-
-    async _refreshBindingAndRender() {
-      try {
-        console.log("Filtered rows:", (rows || []).length, rows?.[0]);
-        const db = this.dataBindings?.getDataBinding?.("main");
-        if (!db) return;
-
-        // Get fresh rows (some tenants return sync array, some return Promise)
-        const rows = await Promise.resolve(db.getData ? db.getData() : db.data);
-
-        // Keep your existing core logic: just pass an object shaped like { data: [...] }
-        this._updateSourceFromBinding({ data: rows || [] });
-        this._render();
-      } catch (e) {
-        console.error("Binding refresh failed:", e);
-  }
-}
-
 
     _updateSourceFromBinding(binding) {
       this._SourceData = this._SourceData || {
@@ -219,86 +149,36 @@
       };
     }
 
-    set main(v) {
-      this._main = v;
-
-      console.log("Main binding updated (filter change likely).", v);
-
-      // SAC can push binding before scripts load, so guard.
-      if (!this._isReady) return;
-
-      // Reuse your existing logic exactly
-      this._updateSourceFromBinding(this._main);
-
-      // Re-render
-      this._render();
-    }
-
-    get main() {
-      return this._main;
-    }
-
-
 
     connectedCallback() {
       loadScriptSequential(CDN_CANDIDATES)
-    .then(() => loadScriptSequential(DATALABELS_CDNS))
-    .then(() => {
-      // your existing init
-      this._SourceData = { DATE: [], PRODUCT_CODE: [], PRODUCT_CATEGORY: [], CLEARING_PRICE: [], SPREAD_CAPTURE: [] };
-      this._LabelData = { UniqueDate: [] };
-      this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
+        .then(() => loadScriptSequential(DATALABELS_CDNS))
+        .then(() => {
+          this._SourceData = {
+            DATE: [],
+            PRODUCT_CODE: [],
+            PRODUCT_CATEGORY: [],
+            CLEARING_PRICE: [],
+            SPREAD_CAPTURE: []
+          };
 
-      // Initial render with current binding
-      this._updateSourceFromBinding(this.main);
-      this._render();
+          this._LabelData = { UniqueDate: [] };
+          this._ProductListData = { Product: [], BarColour: [], LineColour: [] };
 
-      // Now attach the listener (sometimes binding exists a moment later)
-      const ok = this._initBindingListener();
-      if (!ok) {
-        let tries = 0;
-        this._bindingInitTimer = setInterval(() => {
-          tries++;
-          if (this._initBindingListener() || tries >= 30) { // ~3 seconds
-            clearInterval(this._bindingInitTimer);
-            this._bindingInitTimer = null;
-          }
-        }, 100);
-      }
-    })
-    .catch(err =>
-      this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
-    );
+          this._updateSourceFromBinding(this.main);
+          this._render();
+        })
+        .catch(err =>
+          this._showError("Chart.js or datalabels plugin could not be loaded. Check CSP or host internally.")
+        );
     }
 
     onCustomWidgetAfterUpdate() {
-      setTimeout(() => this._refreshBindingAndRender(), 0);
+      this._updateSourceFromBinding(this.main);
+      this._render();
     }
 
-    disconnectedCallback() {
-      try {
-        if (this._bindingInitTimer) {
-          clearInterval(this._bindingInitTimer);
-          this._bindingInitTimer = null;
-        }
-        if (this._db && this._dbHandler) {
-          if (typeof this._db.detachDataChanged === "function") {
-            this._db.detachDataChanged(this._dbHandler);
-          } else if (typeof this._db.removeEventListener === "function") {
-            this._db.removeEventListener("dataChanged", this._dbHandler);
-          }
-        }
-      } catch (e) {
-        console.error("Detach failed:", e);
-      }
-
-      this._db = null;
-      this._dbHandler = null;
-
-      this._destroy();
-    }
-
-
+    disconnectedCallback() { this._destroy(); }
     onCustomWidgetResize() { if (this._chart?.resize) this._chart.resize(); }
 
     _destroy() {
