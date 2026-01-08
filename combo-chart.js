@@ -423,7 +423,7 @@
           datalabels: {
             align: "top",
             anchor: "end",
-            offset: 4,
+            offset: 6,
             color: "#ffffff",
             backgroundColor: labelBgColor,
             borderRadius: 2,
@@ -463,7 +463,7 @@
           order: 0,
           z: 10,
           datalabels: {
-            align: "top",
+            align: "bottom",
             anchor: "end",
             offset: (ctx) => {
               const i = ctx.dataIndex;
@@ -567,8 +567,6 @@
             },
             datalabels: {
               display: "auto",   // allow auto-skip when overlapping
-              // clamp: true,       // keep labels within chart area
-              // clip: true         // clip labels that still go out
             }
           },
           scales: {
