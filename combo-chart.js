@@ -317,7 +317,7 @@
         this._updateSourceFromBinding(this.main);
         const dates = this._LabelData?.UniqueDate || [];
         if (!ok || dates.length === 0) {
-          this._destroy();
+          // this._destroy();
           this._showEmpty("No data", "Try adjusting the story filters or date range");
           return;
         }
@@ -348,7 +348,7 @@
   const hasData = Array.isArray(dates) && dates.length > 0;
 
   if (!ok || !hasData) {
-    this._destroy();
+    // this._destroy();
     this._showEmpty("No data", "Try adjusting the story filters or date range");
     return;
   }
