@@ -465,6 +465,7 @@
           datalabels: {
             align: "bottom",
             anchor: "end",
+            xAlign: "left",
             offset: 6,
             // offset: (ctx) => {
             //   const i = ctx.dataIndex;
