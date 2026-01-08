@@ -343,6 +343,7 @@
 
   if (!ok || !hasData) {
     this._destroy();
+    this._hideOverlay();
     // this._showEmpty("No data", "Try adjusting the story filters or date range");
     return;
   }
