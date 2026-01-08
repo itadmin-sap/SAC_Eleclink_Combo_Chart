@@ -343,7 +343,7 @@
 
   if (!ok || !hasData) {
     this._destroy();
-    this._showEmpty("No data", "Try adjusting the story filters or date range");
+    // this._showEmpty("No data", "Try adjusting the story filters or date range");
     return;
   }
 
