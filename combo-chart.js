@@ -465,11 +465,12 @@
           datalabels: {
             align: "bottom",
             anchor: "end",
-            offset: (ctx) => {
-              const i = ctx.dataIndex;
-              const hasBar = barData[i] != null;
-              return hasBar ? -20 : 4;
-            },
+            offset: 6,
+            // offset: (ctx) => {
+            //   const i = ctx.dataIndex;
+            //   const hasBar = barData[i] != null;
+            //   return hasBar ? -20 : 4;
+            // },
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
             borderRadius: 2,
