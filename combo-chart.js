@@ -272,7 +272,7 @@
 
       uniqueProducts.forEach(p => {
         if (p === DAY_AHEAD_NAME) {
-          barColor.push("#93C47D");   // Day-Ahead bar (green)
+          barColor.push("#A1C7A8");   // Day-Ahead bar (green)
           lineColor.push("#7F7F7F");  // Day-Ahead line (gray)
         } else if (p === LONG_TERM_NAME) {
           // barColor.push("#F9CCCC");   // Long Term bar (light pink)
