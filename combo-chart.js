@@ -41,22 +41,29 @@
         }
       });
 
-      let direction = 1; // 1 = down, -1 = up
-      for (let i = 0; i < labels.length; i++) {
-        for (let j = i + 1; j < labels.length; j++) {
-          const a = labels[i].box;
-          const b = labels[j].box;
+      let changed = true;
+      let direction = 1; // alternate up/down
 
-          const overlap =
-            a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
-            a.y + a.height > b.y;
+      // Keep looping until no overlaps remain
+      while (changed) {
+        changed = false;
+        for (let i = 0; i < labels.length; i++) {
+          for (let j = i + 1; j < labels.length; j++) {
+            const a = labels[i].box;
+            const b = labels[j].box;
 
-          if (overlap) {
-            labels[j].label.options.offset =
-              (labels[j].label.options.offset || 0) + direction * 12;
-            direction *= -1; // flip direction for next overlap
+            const overlap =
+              a.x < b.x + b.width &&
+              a.x + a.width > b.x &&
+              a.y < b.y + b.height &&
+              a.y + a.height > b.y;
+
+            if (overlap) {
+              labels[j].label.options.offset =
+                (labels[j].label.options.offset || 0) + direction * 12;
+              direction *= -1; // flip direction
+              changed = true;
+            }
           }
         }
       }
