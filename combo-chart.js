@@ -547,6 +547,47 @@
       return datasets;
     }
 
+    static collisionPlugin = {
+      id: 'collisionPlugin',
+      afterDatasetsDraw(chart) {
+        const labels = [];
+
+        chart.data.datasets.forEach((ds, dsIndex) => {
+          const meta = chart.getDatasetMeta(dsIndex);
+          if (!meta.hidden && meta.data) {
+            meta.data.forEach((el) => {
+              const label = el.$datalabels?.[0];
+              if (label && label._el) {
+                const box = label._el.getProps(['x','y','width','height'], true);
+                labels.push({box, label});
+              }
+            });
+          }
+        });
+
+        // Resolve collisions by nudging vertically
+        for (let i = 0; i < labels.length; i++) {
+          for (let j = i + 1; j < labels.length; j++) {
+            const a = labels[i].box;
+            const b = labels[j].box;
+
+            const overlap =
+              a.x < b.x + b.width &&
+              a.x + a.width > b.x &&
+              a.y < b.y + b.height &&
+              a.y + a.height > b.y;
+
+            if (overlap) {
+              // Nudge the second label down by 12px
+              labels[j].label.options.offset =
+                (labels[j].label.options.offset || 0) + 12;
+            }
+          }
+        }
+      }
+    };
+
+
     _render() {
       if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
 
@@ -679,7 +720,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels]
+        plugins: [window.ChartDataLabels,collisionPlugin]
       });
 
       // Fallback: ensure loader hides after canvas has actually painted
