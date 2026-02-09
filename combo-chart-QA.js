@@ -411,10 +411,37 @@
             align: "top",
             anchor: "end",
             offset: (ctx) => {
-              const i = ctx.dataIndex;
-              const hasBar = barData[i] != null;
-              return hasBar ? -20 : 4;
+            //   const i = ctx.dataIndex;
+            //   const hasBar = barData[i] != null;
+            //   return hasBar ? -20 : 4;
+
+            const chart = ctx.chart; 
+            const i = ctx.dataIndex; 
+            const vLine = ctx.dataset.data?.[i]; 
+            const vBar = barData?.[i]; 
+
+            if (vLine == null || isNaN(vLine)) return 4; 
+            if (vBar == null || isNaN(vBar)) return 4;
+
+            const yLeft = chart.scales.y.getPixelForValue(vBar); 
+            const yRight = chart.scales.y1.getPixelForValue(vLine); 
+            const dist = Math.abs(yRight - yLeft); 
+
+             // push labels further apart if close 
+            if (dist < 15) return 28; 
+            if (dist < 30) return 18; return 6; 
             },
+             display: (ctx) => 
+            { const chart = ctx.chart; 
+            const i = ctx.dataIndex; 
+            const vLine = ctx.dataset.data?.[i]; 
+            const vBar = barData?.[i]; 
+            
+            if (vLine == null || vBar == null) return true;
+            const yLeft = chart.scales.y.getPixelForValue(vBar); 
+            const yRight = chart.scales.y1.getPixelForValue(vLine); return Math.abs(yRight - yLeft) > 8;  // hide if overlap is extreme 
+            },
+
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
             borderRadius: 2,
@@ -431,6 +458,47 @@
             formatter: (v) => v == null || isNaN(v) ? "" : v.toFixed(0) + "%"
           }
         });
+        // datalabels: {
+        //   align: "top",
+        //   anchor: "end",
+        //   offset: (ctx) => 
+        //   { const chart = ctx.chart; 
+        //     const i = ctx.dataIndex; 
+        //     const vLine = ctx.dataset.data?.[i]; 
+        //     const vBar = barData?.[i]; 
+
+        //     if (vLine == null || isNaN(vLine)) return 4; 
+        //     if (vBar == null || isNaN(vBar)) return 4;
+
+        //     const yLeft = chart.scales.y.getPixelForValue(vBar); 
+        //     const yRight = chart.scales.y1.getPixelForValue(vLine); 
+        //     const dist = Math.abs(yRight - yLeft); 
+            
+        //     // push labels further apart if close 
+        //     if (dist < 15) return 28; 
+        //     if (dist < 30) return 18; return 6; 
+        //   },
+          
+        //   display: (ctx) => 
+        //     { const chart = ctx.chart; 
+        //     const i = ctx.dataIndex; 
+        //     const vLine = ctx.dataset.data?.[i]; 
+        //     const vBar = barData?.[i]; 
+            
+        //     if (vLine == null || vBar == null) return true;
+        //     const yLeft = chart.scales.y.getPixelForValue(vBar); 
+        //     const yRight = chart.scales.y1.getPixelForValue(vLine); return Math.abs(yRight - yLeft) > 8; 
+            
+        //     // hide if overlap is extreme 
+        //     },
+
+        //     color: "#ffffff", 
+        //     backgroundColor: labelBgColor_1, 
+        //     borderRadius: 2,
+        //     padding: { top: 4, bottom: 4, left: 6, right: 6 }, 
+        //     font: { weight: "bold", size: 11 }, 
+        //     formatter: (v) => v == null || isNaN(v) ? "" : v.toFixed(0) + "%"
+        //    }
       });
 
       return datasets;
