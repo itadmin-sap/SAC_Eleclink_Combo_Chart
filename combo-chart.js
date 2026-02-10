@@ -495,38 +495,74 @@
             //   if (dist < 35) return 18;
             //   return 6;
               
+            // offset: (ctx) => {
+            //   const chart = ctx.chart;
+            //   const i = ctx.dataIndex;
+
+            //   const vLine = ctx.dataset.data?.[i];
+            //   if (vLine == null || isNaN(vLine)) return 6;
+
+            //   // bar dataset for this product is pushed just before the line dataset
+            //   const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
+            //   const vBar = barDs?.data?.[i];
+
+            //   const yLeft = chart.scales.y;
+            //   const yRight = chart.scales.y1;
+
+            //   const barY  = vBar != null ? yLeft.getPixelForValue(vBar) : null;
+            //   const lineY = yRight.getPixelForValue(vLine);
+
+            //   // also get the point element (the black dot)
+            //   const pointEl = chart.getDatasetMeta(ctx.datasetIndex).data[i];
+            //   const pointY = pointEl?.y;
+
+            //   let dist = barY != null ? Math.abs(lineY - barY) : 999;
+
+            //   // If label is too close to the point itself, push further
+            //   const labelTooCloseToPoint = Math.abs(lineY - pointY) < 10;
+
+            //  // Always push labels downward, with adaptive spacing 
+            //   if (dist < 20 || labelTooCloseToPoint) return 30;
+            //   if (dist < 35) return 22; 
+            //   return 14;
+
             offset: (ctx) => {
               const chart = ctx.chart;
               const i = ctx.dataIndex;
 
               const vLine = ctx.dataset.data?.[i];
-              if (vLine == null || isNaN(vLine)) return 6;
+              if (vLine == null || isNaN(vLine)) return 14;
 
-              // bar dataset for this product is pushed just before the line dataset
-              const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
-              const vBar = barDs?.data?.[i];
-
-              const yLeft = chart.scales.y;
               const yRight = chart.scales.y1;
-
-              const barY  = vBar != null ? yLeft.getPixelForValue(vBar) : null;
               const lineY = yRight.getPixelForValue(vLine);
 
-              // also get the point element (the black dot)
               const pointEl = chart.getDatasetMeta(ctx.datasetIndex).data[i];
               const pointY = pointEl?.y;
+              const pointX = pointEl?.x;
 
-              let dist = barY != null ? Math.abs(lineY - barY) : 999;
+              // Default downward offset
+              let offset = 20;
 
-              // If label is too close to the point itself, push further
-              const labelTooCloseToPoint = Math.abs(lineY - pointY) < 10;
+              // Validation: keep label below the x-axis baseline
+              const xAxisBottom = chart.scales.x.bottom;
+              if (pointY + offset < xAxisBottom) {
+                offset = xAxisBottom - pointY + 10; // push further down
+              }
 
-             // Always push labels downward, with adaptive spacing 
-              if (dist < 20 || labelTooCloseToPoint) return 30;
-              if (dist < 35) return 22; 
-              return 14;
+              // Validation: keep label inside y-axis boundaries
+              const yAxisLeft = chart.scales.y.left;
+              const yAxisRight = chart.scales.y.right;
+              const labelWidth = 40; // approximate width of label
 
-              
+              if (pointX - labelWidth / 2 < yAxisLeft) {
+                ctx.xAdjust = yAxisLeft - (pointX - labelWidth / 2) + 10;
+              }
+              if (pointX + labelWidth / 2 > yAxisRight) {
+                ctx.xAdjust = (pointX + labelWidth / 2) - yAxisRight + 10;
+              }
+
+              return offset;
+
             },
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
