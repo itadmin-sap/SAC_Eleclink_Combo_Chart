@@ -465,9 +465,9 @@
           order: 0,
           z: 10,
           datalabels: {
-            align: "top",
+            align: "bottom",
             anchor: "end",
-            xAlign: "left",
+            xAlign: "center",
             // offset: (ctx) => {
             //   const chart = ctx.chart;
             //   const i = ctx.dataIndex;
