@@ -23,52 +23,52 @@
     });
   }
 
-  const collisionPlugin = {
-    id: 'collisionPlugin',
-    afterDatasetsDraw(chart) {
-      const labels = [];
+  // const collisionPlugin = {
+  //   id: 'collisionPlugin',
+  //   afterDatasetsDraw(chart) {
+  //     const labels = [];
 
-      chart.data.datasets.forEach((ds, dsIndex) => {
-        const meta = chart.getDatasetMeta(dsIndex);
-        if (!meta.hidden && meta.data) {
-          meta.data.forEach((el) => {
-            const label = el.$datalabels?.[0];
-            if (label && label._el) {
-              const box = label._el.getProps(['x','y','width','height'], true);
-              labels.push({ box, label });
-            }
-          });
-        }
-      });
+  //     chart.data.datasets.forEach((ds, dsIndex) => {
+  //       const meta = chart.getDatasetMeta(dsIndex);
+  //       if (!meta.hidden && meta.data) {
+  //         meta.data.forEach((el) => {
+  //           const label = el.$datalabels?.[0];
+  //           if (label && label._el) {
+  //             const box = label._el.getProps(['x','y','width','height'], true);
+  //             labels.push({ box, label });
+  //           }
+  //         });
+  //       }
+  //     });
 
-      let changed = true;
-      let direction = 1; // alternate up/down
+  //     let changed = true;
+  //     let direction = 1; // alternate up/down
 
-      // Keep looping until no overlaps remain
-      while (changed) {
-        changed = false;
-        for (let i = 0; i < labels.length; i++) {
-          for (let j = i + 1; j < labels.length; j++) {
-            const a = labels[i].box;
-            const b = labels[j].box;
+  //     // Keep looping until no overlaps remain
+  //     while (changed) {
+  //       changed = false;
+  //       for (let i = 0; i < labels.length; i++) {
+  //         for (let j = i + 1; j < labels.length; j++) {
+  //           const a = labels[i].box;
+  //           const b = labels[j].box;
 
-            const overlap =
-              a.x < b.x + b.width &&
-              a.x + a.width > b.x &&
-              a.y < b.y + b.height &&
-              a.y + a.height > b.y;
+  //           const overlap =
+  //             a.x < b.x + b.width &&
+  //             a.x + a.width > b.x &&
+  //             a.y < b.y + b.height &&
+  //             a.y + a.height > b.y;
 
-            if (overlap) {
-              labels[j].label.options.offset =
-                (labels[j].label.options.offset || 0) + direction * 12;
-              direction *= -1; // flip direction
-              changed = true;
-            }
-          }
-        }
-      }
-    }
-  };
+  //           if (overlap) {
+  //             labels[j].label.options.offset =
+  //               (labels[j].label.options.offset || 0) + direction * 12;
+  //             direction *= -1; // flip direction
+  //             changed = true;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // };
 
 
 
@@ -548,23 +548,30 @@
               const vLine = ctx.dataset.data?.[i]; 
               const vBar = barData?.[i]; 
 
-              if (vLine == null || isNaN(vLine)) return 4; 
-              if (vBar == null || isNaN(vBar)) return 4;
-
+              if (vLine == null || vBar == null) return "top"; 
+              const yLeft = chart.scales.y.getPixelForValue(vBar); 
+              const yRight = chart.scales.y1.getPixelForValue(vLine); 
+              
+              // Flip alignment depending on relative position
+              return yRight < yLeft ? "bottom" : "top";
+            },
+            anchor: "end", 
+            xAlign: "left", 
+            offset: (ctx) => {
+              const chart = ctx.chart; 
+              const i = ctx.dataIndex; 
+              const vLine = ctx.dataset.data?.[i]; 
+              const vBar = barData?.[i]; if (vLine == null || vBar == null) return 4; 
               const yLeft = chart.scales.y.getPixelForValue(vBar); 
               const yRight = chart.scales.y1.getPixelForValue(vLine); 
               const dist = Math.abs(yRight - yLeft); 
+              
+              // proportional offset: closer → larger push 
+              // 
+              return Math.max(6, 30 - dist);
 
-             // push labels further apart if close 
-              if (dist < 15) return 28; 
-              if (dist < 30) return 18; return 6; 
             },
 
-            // offset: (ctx) => {
-            //   const i = ctx.dataIndex;
-            //   const hasBar = barData[i] != null;
-            //   return hasBar ? -20 : 4;
-            // },
 
               display: (ctx) => { 
                 const chart = ctx.chart; 
@@ -574,7 +581,9 @@
               
                 if (vLine == null || vBar == null) return true;
                 const yLeft = chart.scales.y.getPixelForValue(vBar); 
-                const yRight = chart.scales.y1.getPixelForValue(vLine); return Math.abs(yRight - yLeft) > 8;  // hide if overlap is extreme 
+                const yRight = chart.scales.y1.getPixelForValue(vLine); 
+                
+                return Math.abs(yRight - yLeft) > 8;  
             },
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
@@ -729,7 +738,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels,collisionPlugin]
+        plugins: [window.ChartDataLabels]
       });
 
       // Fallback: ensure loader hides after canvas has actually painted
