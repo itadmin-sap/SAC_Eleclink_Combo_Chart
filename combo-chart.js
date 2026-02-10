@@ -543,12 +543,6 @@
               // Default downward offset
               let offset = 20;
 
-              // Validation: keep label below the x-axis baseline
-              const xAxisBottom = chart.scales.x.bottom;
-              if (pointY + offset < xAxisBottom) {
-                offset = xAxisBottom - pointY + 10; // push further down
-              }
-
               // Validation: keep label inside y-axis boundaries
               const yAxisLeft = chart.scales.y.left;
               const yAxisRight = chart.scales.y.right;
@@ -560,6 +554,20 @@
               if (pointX + labelWidth / 2 > yAxisRight) {
                 ctx.xAdjust = (pointX + labelWidth / 2) - yAxisRight + 10;
               }
+
+              // --- X-axis validation (new) --- 
+              const xAxisTop = chart.scales.x.top; 
+              const xAxisBottom = chart.scales.x.bottom; 
+              const labelHeight = 20; 
+              
+              // approximate height of label // Prevent label from crossing above the x-axis 
+              // 
+              if (pointY + offset < xAxisTop + labelHeight) 
+              { offset = (xAxisTop + labelHeight) - pointY + 10; } 
+              
+              // Prevent label from crossing below the x-axis 
+              if (pointY + offset > xAxisBottom - labelHeight) 
+              { offset = (xAxisBottom - labelHeight) - pointY - 10; }
 
               return offset;
 
