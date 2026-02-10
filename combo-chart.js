@@ -549,8 +549,8 @@
     }
 
     _render() {
-      // if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
-      if (!this._canvas || !window.Chart) return;
+      if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
+      // if (!this._canvas || !window.Chart) return;
 
      
 
