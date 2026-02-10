@@ -733,7 +733,8 @@
                 display: true,
                 backdropColor: "transparent",
                 color: "#000000",
-                padding: 35
+                // padding: 35
+                padding: { top: 35 , right: 0, bottom: 10, left: 0}
               }
             }
           }
