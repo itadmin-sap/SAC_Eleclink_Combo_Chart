@@ -22,62 +22,6 @@
       tryNext(0);
     });
   }
-  
-  const datalabelCollisionResolver = {
-    id: "datalabelCollisionResolver",
-
-    afterDatasetsDraw(chart) {
-      const raw = chart.$datalabels?._labels;
-      if (!Array.isArray(raw)) return;
-
-      const placed = [];
-
-      raw.forEach(l => {
-        // 🔴 SAFETY GUARDS
-        if (!l || !l._el || !l.options) return;
-        if (l.options.display === false) return;
-
-        const el = l._el;
-
-        let box = el.getProps(["x", "y", "width", "height"], true);
-        if (!box) return;
-
-        let tries = 0;
-
-        while (tries < 20) {
-          let overlap = false;
-
-          for (const p of placed) {
-            const collide = !(
-              box.x + box.width < p.x ||
-              p.x + p.width < box.x ||
-              box.y + box.height < p.y ||
-              p.y + p.height < box.y
-            );
-
-            if (collide) {
-              overlap = true;
-
-              // push fully above
-              el.options.offset = (el.options.offset || 0) + box.height + 6;
-
-              box = el.getProps(["x", "y", "width", "height"], true);
-              break;
-            }
-          }
-
-          if (!overlap) break;
-
-          tries++;
-        }
-
-        placed.push(box);
-      });
-    }
-  };
-
-
-
 
   class PerciComboChart extends HTMLElement {
     constructor() {
@@ -360,7 +304,7 @@
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
         .then(async () => {
-        window.Chart.register(window.ChartDataLabels, datalabelCollisionResolver);
+        // window.Chart.register(window.ChartDataLabels, datalabelCollisionResolver);
         const token = ++this._renderToken;
         this._showLoading("Loading…", "Initializing and fetching data");
 
@@ -524,73 +468,64 @@
             align: "top",
             anchor: "end",
             xAlign: "left",
+            // offset: (ctx) => {
+            //   const chart = ctx.chart;
+            //   const i = ctx.dataIndex;
+
+            //   const vLine = ctx.dataset.data?.[i];
+            //   if (vLine == null || isNaN(vLine)) return 6;
+
+            //   // bar dataset for this product is pushed just before the line dataset
+            //   const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
+            //   const vBar = barDs?.data?.[i];
+
+            //   // if no bar, keep normal spacing
+            //   if (vBar == null || isNaN(vBar)) return 6;
+
+            //   const yLeft = chart.scales.y;   // bar axis
+            //   const yRight = chart.scales.y1; // line axis
+
+            //   const barY  = yLeft.getPixelForValue(vBar);
+            //   const lineY = yRight.getPixelForValue(vLine);
+
+            //   const dist = Math.abs(lineY - barY);
+
+            //   // If they're close, push the line label further away
+            //   if (dist < 20) return 26;
+            //   if (dist < 35) return 18;
+            //   return 6;
+              
             offset: (ctx) => {
-              // const chart = ctx.chart;
-              // const i = ctx.dataIndex;
+              const chart = ctx.chart;
+              const i = ctx.dataIndex;
 
-              // const vLine = ctx.dataset.data?.[i];
-              // if (vLine == null || isNaN(vLine)) return 6;
+              const vLine = ctx.dataset.data?.[i];
+              if (vLine == null || isNaN(vLine)) return 6;
 
-              // // bar dataset for this product is pushed just before the line dataset
-              // const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
-              // const vBar = barDs?.data?.[i];
+              // bar dataset for this product is pushed just before the line dataset
+              const barDs = chart.data.datasets?.[ctx.datasetIndex - 1];
+              const vBar = barDs?.data?.[i];
 
-              // // if no bar, keep normal spacing
-              // if (vBar == null || isNaN(vBar)) return 6;
+              const yLeft = chart.scales.y;
+              const yRight = chart.scales.y1;
 
-              // const yLeft = chart.scales.y;   // bar axis
-              // const yRight = chart.scales.y1; // line axis
+              const barY  = vBar != null ? yLeft.getPixelForValue(vBar) : null;
+              const lineY = yRight.getPixelForValue(vLine);
 
-              // const barY  = yLeft.getPixelForValue(vBar);
-              // const lineY = yRight.getPixelForValue(vLine);
+              // also get the point element (the black dot)
+              const pointEl = chart.getDatasetMeta(ctx.datasetIndex).data[i];
+              const pointY = pointEl?.y;
 
-              // const dist = Math.abs(lineY - barY);
+              let dist = barY != null ? Math.abs(lineY - barY) : 999;
 
-              // // If they're close, push the line label further away
-              // if (dist < 20) return 26;
-              // if (dist < 35) return 18;
-              // return 6;
-              const chart = ctx.chart; 
-              const i = ctx.dataIndex; 
-              const vLine = ctx.dataset.data?.[i]; 
-              const vBar = barData?.[i]; 
+              // If label is too close to the point itself, push further
+              const labelTooCloseToPoint = Math.abs(lineY - pointY) < 10;
 
-              if (vLine == null || vBar == null) return "top"; 
-              const yLeft = chart.scales.y.getPixelForValue(vBar); 
-              const yRight = chart.scales.y1.getPixelForValue(vLine); 
+              if (dist < 20 || labelTooCloseToPoint) return 26;
+              if (dist < 35) return 18;
+              return 6;
+
               
-              // Flip alignment depending on relative position
-              return yRight < yLeft ? "bottom" : "top";
-            },
-            anchor: "end", 
-            xAlign: "left", 
-            offset: (ctx) => {
-              const chart = ctx.chart; 
-              const i = ctx.dataIndex; 
-              const vLine = ctx.dataset.data?.[i]; 
-              const vBar = barData?.[i]; if (vLine == null || vBar == null) return 4; 
-              const yLeft = chart.scales.y.getPixelForValue(vBar); 
-              const yRight = chart.scales.y1.getPixelForValue(vLine); 
-              const dist = Math.abs(yRight - yLeft); 
-              
-              // proportional offset: closer → larger push 
-              // 
-              return Math.max(6, 30 - dist);
-
-            },
-
-
-              display: (ctx) => { 
-                const chart = ctx.chart; 
-                const i = ctx.dataIndex; 
-                const vLine = ctx.dataset.data?.[i]; 
-                const vBar = barData?.[i]; 
-              
-                if (vLine == null || vBar == null) return true;
-                const yLeft = chart.scales.y.getPixelForValue(vBar); 
-                const yRight = chart.scales.y1.getPixelForValue(vLine); 
-                
-                return Math.abs(yRight - yLeft) > 8;  
             },
             color: "#ffffff",
             backgroundColor: labelBgColor_1,
