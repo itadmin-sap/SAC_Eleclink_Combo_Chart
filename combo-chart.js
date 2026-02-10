@@ -733,7 +733,7 @@
                 display: true,
                 backdropColor: "transparent",
                 color: "#000000",
-                padding: 12
+                padding: 35
               }
             }
           }
