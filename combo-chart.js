@@ -27,24 +27,25 @@
     id: "datalabelCollisionResolver",
 
     afterDatasetsDraw(chart) {
-      const labels = chart.$datalabels?._labels || [];
-      if (!labels.length) return;
+      const raw = chart.$datalabels?._labels;
+      if (!Array.isArray(raw)) return;
 
       const placed = [];
 
-      labels.forEach(l => {
-        if (!l.options.display) return;
+      raw.forEach(l => {
+        // 🔴 SAFETY GUARDS
+        if (!l || !l._el || !l.options) return;
+        if (l.options.display === false) return;
 
         const el = l._el;
 
         let box = el.getProps(["x", "y", "width", "height"], true);
+        if (!box) return;
 
-        let overlap = true;
         let tries = 0;
 
-        // keep moving label upward until no collision
-        while (overlap && tries < 20) {
-          overlap = false;
+        while (tries < 20) {
+          let overlap = false;
 
           for (const p of placed) {
             const collide = !(
@@ -57,13 +58,15 @@
             if (collide) {
               overlap = true;
 
-              // push label UP by full height + padding
-              el.options.offset += box.height + 6;
+              // push fully above
+              el.options.offset = (el.options.offset || 0) + box.height + 6;
 
               box = el.getProps(["x", "y", "width", "height"], true);
               break;
             }
           }
+
+          if (!overlap) break;
 
           tries++;
         }
@@ -72,6 +75,7 @@
       });
     }
   };
+
 
 
 
