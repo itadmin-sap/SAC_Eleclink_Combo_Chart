@@ -534,8 +534,6 @@
               if (vLine == null || isNaN(vLine)) return 14;
 
               const yRight = chart.scales.y1;
-              const lineY = yRight.getPixelForValue(vLine);
-
               const pointEl = chart.getDatasetMeta(ctx.datasetIndex).data[i];
               const pointY = pointEl?.y;
               const pointX = pointEl?.x;
@@ -563,10 +561,12 @@
 
               // --- X-axis validation ---
               const labelY = pointY + offset;
+
               // Prevent crossing below x-axis line
               if (labelY + labelHeight / 2 >= xAxisBottom) {
                 offset = (xAxisBottom - pointY) - labelHeight - 4;
               }
+
               // Prevent crossing above x-axis line
               if (labelY - labelHeight / 2 <= xAxisTop) {
                 offset = (xAxisTop - pointY) + labelHeight + 4;
