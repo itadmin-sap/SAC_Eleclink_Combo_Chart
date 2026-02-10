@@ -539,7 +539,7 @@
               const pointX = pointEl?.x;
 
               // Default downward offset
-              let offset = 20;
+              let offset = 12;
 
               // Approximate label dimensions
               const labelHeight = 20;
@@ -573,8 +573,8 @@
               }
 
               // Clamp offset to safe range
-              const minOffset = 10;
-              const maxOffset = 40;
+              const minOffset = 6;
+              const maxOffset = 18;
               offset = Math.max(minOffset, Math.min(maxOffset, offset));
 
               return offset;
