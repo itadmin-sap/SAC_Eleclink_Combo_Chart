@@ -543,33 +543,43 @@
               // Default downward offset
               let offset = 20;
 
-              // Validation: keep label inside y-axis boundaries
+              // Approximate label dimensions
+              const labelHeight = 20;
+              const labelWidth = 40;
+
+              // Axis boundaries
               const yAxisLeft = chart.scales.y.left;
               const yAxisRight = chart.scales.y.right;
-              const labelWidth = 40; // approximate width of label
+              const xAxisTop = chart.scales.x.top;
+              const xAxisBottom = chart.scales.x.bottom;
 
+              // --- Y-axis validation ---
               if (pointX - labelWidth / 2 < yAxisLeft) {
-                ctx.xAdjust = yAxisLeft - (pointX - labelWidth / 2) + 10;
+                ctx.xAdjust = yAxisLeft - (pointX - labelWidth / 2) + 4;
               }
               if (pointX + labelWidth / 2 > yAxisRight) {
-                ctx.xAdjust = (pointX + labelWidth / 2) - yAxisRight + 10;
+                ctx.xAdjust = (pointX + labelWidth / 2) - yAxisRight + 4;
               }
 
-              // --- X-axis validation (new) --- 
-              const xAxisTop = chart.scales.x.top; 
-              const xAxisBottom = chart.scales.x.bottom; 
-              const labelHeight = 20; 
-              
-              // approximate height of label // Prevent label from crossing above the x-axis 
-              // 
-              if (pointY + offset < xAxisTop + labelHeight) 
-              { offset = (xAxisTop + labelHeight) - pointY + 10; } 
-              
-              // Prevent label from crossing below the x-axis 
-              if (pointY + offset > xAxisBottom - labelHeight) 
-              { offset = (xAxisBottom - labelHeight) - pointY - 10; }
+              // --- X-axis validation ---
+              const labelY = pointY + offset;
+              // Prevent crossing below x-axis line
+              if (labelY + labelHeight / 2 >= xAxisBottom) {
+                offset = (xAxisBottom - pointY) - labelHeight - 4;
+              }
+              // Prevent crossing above x-axis line
+              if (labelY - labelHeight / 2 <= xAxisTop) {
+                offset = (xAxisTop - pointY) + labelHeight + 4;
+              }
+
+              // Clamp offset to safe range
+              const minOffset = 10;
+              const maxOffset = 40;
+              offset = Math.max(minOffset, Math.min(maxOffset, offset));
 
               return offset;
+  
+
 
             },
             color: "#ffffff",
