@@ -22,87 +22,34 @@
       tryNext(0);
     });
   }
-
-  // const collisionPlugin = {
-  //   id: 'collisionPlugin',
-  //   afterDatasetsDraw(chart) {
-  //     const labels = [];
-
-  //     chart.data.datasets.forEach((ds, dsIndex) => {
-  //       const meta = chart.getDatasetMeta(dsIndex);
-  //       if (!meta.hidden && meta.data) {
-  //         meta.data.forEach((el) => {
-  //           const label = el.$datalabels?.[0];
-  //           if (label && label._el) {
-  //             const box = label._el.getProps(['x','y','width','height'], true);
-  //             labels.push({ box, label });
-  //           }
-  //         });
-  //       }
-  //     });
-
-  //     let changed = true;
-  //     let direction = 1; // alternate up/down
-
-  //     // Keep looping until no overlaps remain
-  //     while (changed) {
-  //       changed = false;
-  //       for (let i = 0; i < labels.length; i++) {
-  //         for (let j = i + 1; j < labels.length; j++) {
-  //           const a = labels[i].box;
-  //           const b = labels[j].box;
-
-  //           const overlap =
-  //             a.x < b.x + b.width &&
-  //             a.x + a.width > b.x &&
-  //             a.y < b.y + b.height &&
-  //             a.y + a.height > b.y;
-
-  //           if (overlap) {
-  //             labels[j].label.options.offset =
-  //               (labels[j].label.options.offset || 0) + direction * 12;
-  //             direction *= -1; // flip direction
-  //             changed = true;
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // };
   
-// Register plugin globally (outside any class or dataset definition)
-Chart.register({
-  id: "datalabelCollisionResolver",
-  afterDatasetsDraw(chart) {
-    const labels = chart.$datalabels?.labels || [];
-    const boxes = labels.map(l => {
-      if (!l.options.display) return null;
-      const b = l._el.getProps(["x", "y", "width", "height"], true);
-      return { el: l._el, ...b };
-    }).filter(Boolean);
+  const datalabelCollisionResolver = {
+    id: "datalabelCollisionResolver",
+    afterDatasetsDraw(chart) {
+      const labels = chart.$datalabels?.labels || [];
+      const boxes = labels.map(l => {
+        if (!l.options.display) return null;
+        const b = l._el.getProps(["x", "y", "width", "height"], true);
+        return { el: l._el, ...b };
+      }).filter(Boolean);
 
-    for (let i = 0; i < boxes.length; i++) {
-      for (let j = i + 1; j < boxes.length; j++) {
-        const a = boxes[i], b = boxes[j];
-        if (!a || !b) continue;
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i], b = boxes[j];
 
-        const overlap = !(a.x + a.width < b.x ||
-                          b.x + b.width < a.x ||
-                          a.y + a.height < b.y ||
-                          b.y + b.height < a.y);
+          const overlap = !(a.x + a.width < b.x ||
+                            b.x + b.width < a.x ||
+                            a.y + a.height < b.y ||
+                            b.y + b.height < a.y);
 
-        if (overlap) {
-          if (a.y < b.y) {
-            b.el.options.offset += 10;
-          } else {
-            a.el.options.offset += 10;
+          if (overlap) {
+            if (a.y < b.y) b.el.options.offset += 10;
+            else a.el.options.offset += 10;
           }
         }
       }
     }
-  }
-});
-
+  };
 
 
   class PerciComboChart extends HTMLElement {
@@ -386,6 +333,7 @@ Chart.register({
       loadScriptSequential(CDN_CANDIDATES)
         .then(() => loadScriptSequential(DATALABELS_CDNS))
         .then(async () => {
+        window.Chart.register(window.ChartDataLabels, datalabelCollisionResolver);
         const token = ++this._renderToken;
         this._showLoading("Loading…", "Initializing and fetching data");
 
@@ -639,7 +587,10 @@ Chart.register({
     }
 
     _render() {
-      if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
+      // if (!this._canvas || !window.Chart || !window.ChartDataLabels) return;
+      if (!this._canvas || !window.Chart) return;
+
+     
 
       const token = ++this._renderToken;   // mark this render as latest
       const dates  = this._LabelData.UniqueDate;
