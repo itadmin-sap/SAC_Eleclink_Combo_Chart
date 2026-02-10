@@ -25,31 +25,54 @@
   
   const datalabelCollisionResolver = {
     id: "datalabelCollisionResolver",
+
     afterDatasetsDraw(chart) {
-      const labels = chart.$datalabels?.labels || [];
-      const boxes = labels.map(l => {
-        if (!l.options.display) return null;
-        const b = l._el.getProps(["x", "y", "width", "height"], true);
-        return { el: l._el, ...b };
-      }).filter(Boolean);
+      const labels = chart.$datalabels?._labels || [];
+      if (!labels.length) return;
 
-      for (let i = 0; i < boxes.length; i++) {
-        for (let j = i + 1; j < boxes.length; j++) {
-          const a = boxes[i], b = boxes[j];
+      const placed = [];
 
-          const overlap = !(a.x + a.width < b.x ||
-                            b.x + b.width < a.x ||
-                            a.y + a.height < b.y ||
-                            b.y + b.height < a.y);
+      labels.forEach(l => {
+        if (!l.options.display) return;
 
-          if (overlap) {
-            if (a.y < b.y) b.el.options.offset += 10;
-            else a.el.options.offset += 10;
+        const el = l._el;
+
+        let box = el.getProps(["x", "y", "width", "height"], true);
+
+        let overlap = true;
+        let tries = 0;
+
+        // keep moving label upward until no collision
+        while (overlap && tries < 20) {
+          overlap = false;
+
+          for (const p of placed) {
+            const collide = !(
+              box.x + box.width < p.x ||
+              p.x + p.width < box.x ||
+              box.y + box.height < p.y ||
+              p.y + p.height < box.y
+            );
+
+            if (collide) {
+              overlap = true;
+
+              // push label UP by full height + padding
+              el.options.offset += box.height + 6;
+
+              box = el.getProps(["x", "y", "width", "height"], true);
+              break;
+            }
           }
+
+          tries++;
         }
-      }
+
+        placed.push(box);
+      });
     }
   };
+
 
 
   class PerciComboChart extends HTMLElement {
@@ -721,7 +744,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels,datalabelCollisionResolver]
+        plugins: [window.ChartDataLabels]
       });
 
       // Fallback: ensure loader hides after canvas has actually painted
