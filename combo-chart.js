@@ -521,9 +521,10 @@
               // If label is too close to the point itself, push further
               const labelTooCloseToPoint = Math.abs(lineY - pointY) < 10;
 
-              if (dist < 20 || labelTooCloseToPoint) return 26;
-              if (dist < 35) return 18;
-              return 6;
+             // Always push labels downward, with adaptive spacing 
+              if (dist < 20 || labelTooCloseToPoint) return 30;
+              if (dist < 35) return 22; 
+              return 14;
 
               
             },
