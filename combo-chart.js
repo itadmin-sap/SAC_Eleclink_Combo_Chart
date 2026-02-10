@@ -69,7 +69,39 @@
   //     }
   //   }
   // };
+  
+// Register plugin globally (outside any class or dataset definition)
+Chart.register({
+  id: "datalabelCollisionResolver",
+  afterDatasetsDraw(chart) {
+    const labels = chart.$datalabels?.labels || [];
+    const boxes = labels.map(l => {
+      if (!l.options.display) return null;
+      const b = l._el.getProps(["x", "y", "width", "height"], true);
+      return { el: l._el, ...b };
+    }).filter(Boolean);
 
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i], b = boxes[j];
+        if (!a || !b) continue;
+
+        const overlap = !(a.x + a.width < b.x ||
+                          b.x + b.width < a.x ||
+                          a.y + a.height < b.y ||
+                          b.y + b.height < a.y);
+
+        if (overlap) {
+          if (a.y < b.y) {
+            b.el.options.offset += 10;
+          } else {
+            a.el.options.offset += 10;
+          }
+        }
+      }
+    }
+  }
+});
 
 
 
@@ -738,7 +770,7 @@
             }
           }
         },
-        plugins: [window.ChartDataLabels]
+        plugins: [window.ChartDataLabels,datalabelCollisionResolver]
       });
 
       // Fallback: ensure loader hides after canvas has actually painted
