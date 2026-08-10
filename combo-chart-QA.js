@@ -497,7 +497,7 @@
           plugins: {
             title: {
               display: true,
-              text: "SPREAD CAPTURE VS CLEARING PRICE",
+              text: "SPREAD CAPTURE VS CLEARING PRICE - DAY AHEAD",
               font: { size: 20, weight: "bold" },
               align: "center",
               color: "#000000",
